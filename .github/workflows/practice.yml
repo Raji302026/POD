@@ -1,0 +1,19 @@
+name: practice-run
+
+on:
+  workflow_dispatch:
+    inputs:
+      should_fail:
+        description: "Make this run fail on purpose (true/false)"
+        required: true
+        default: "false"
+
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Say hello
+        run: echo "Hello from practice-run"
+      - name: Fail on purpose if asked
+        if: ${{ inputs.should_fail == 'true' }}
+        run: exit 1
