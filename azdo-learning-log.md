@@ -47,3 +47,13 @@ Started: 2026-10-07
 - How it applies to Robility: add a secret-scan stage to PR validation pipelines for shared repos and make it a required build policy on main.
 - Status: proven in a sandbox repo on GitHub; the Azure DevOps equivalent is not yet tried
 - Summary line for Webex: Added a gitleaks secret-scan as a required PR check and proved it blocks a merge containing a fake credential (secret scanning, branch policies, DevSecOps); mapped to Robility PR validation pipelines.
+
+## 2026-10-07 - Environments with required reviewers (deployment approval gate)
+- What it does: a job linked to an environment with required reviewers pauses until a reviewer approves. The staging environment has no rules; production requires an approval.
+- Commands I ran: created staging and production environments in repo settings (production with a required reviewer); added deploy-demo.yml with deploy-staging and deploy-production (needs: deploy-staging); merged it through PR 9; ran it from the Actions page and approved production with a comment; verified with gh run list, gh run view --json jobs --jq, and gh api .../approvals (state approved, user Raji302026, comment "approved for practice").
+- What I noticed: the production job showed a Waiting status until I approved it, and the total run time of 3m50s included the time spent waiting. Approvals are recorded and can be queried through the API.
+- What went wrong and how I fixed it: nothing broke in this block. gh workflow run cannot start workflows from Codespaces (403), so I started it from the Actions page.
+- Key learning: I left Prevent self-review off so I could approve my own deployment while practicing; on a real team it should be on so a different person approves.
+- How it applies to Robility: Azure DevOps environments with approvals and checks gate deployments to SIT and Production, and this is the same pattern.
+- Status: proven in a sandbox repo on GitHub; Azure DevOps environments not yet tried
+- Summary line for Webex: Configured GitHub environments with required reviewers and ran a two-stage deploy that paused for production approval (deployment gates, approvals); mapped to Robility SIT and Production deployments.
