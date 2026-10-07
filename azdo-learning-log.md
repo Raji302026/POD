@@ -38,3 +38,12 @@ Started: 2026-10-07
 - How it applies to Robility: add a secret-scanning step to PR validation pipelines so credentials are caught before code reaches main.
 - Status: tried (sandbox repo)
 - Summary line for Webex: Scanned Kubernetes manifests for secrets before publishing and organized them into a repo folder via a protected-branch PR (secret scanning, DevSecOps hygiene); mapped to Robility PR validation pipelines.
+
+## 2026-10-07 - Secret scanning as a required PR check (gitleaks)
+- What it does: a second job, secret-scan, runs gitleaks on every pull request and fails the check if it finds a credential. I made it a required check in the ruleset so a leak cannot be merged.
+- Commands I ran: added the secret-scan job to pr-check.yml (gitleaks pinned to v8.30.1, runner pinned to ubuntu-24.04); opened PR 6 (both checks passed, merged); added both checks as required in the ruleset in the browser; opened PR 7 with a fake credential in fake-config.txt (secret-scan failed, merge state BLOCKED, gh pr merge refused); closed it with gh pr close 7 --delete-branch instead of merging; added --verbose to the scan so the log names the file that matched.
+- What went wrong and how I fixed it: I typed job names as commands by mistake (command not found, harmless); a gh command with a cut-off quote was cancelled with Ctrl+C and retyped; a stale remote branch bookmark was removed with git fetch --prune.
+- Key learning: deleting the file in a later commit does not remove a secret from Git history, so the right response is to close the PR, delete the branch and rotate a real credential. Scanning only protects the repo when it is a required check.
+- How it applies to Robility: add a secret-scan stage to PR validation pipelines for shared repos and make it a required build policy on main.
+- Status: proven in a sandbox repo on GitHub; the Azure DevOps equivalent is not yet tried
+- Summary line for Webex: Added a gitleaks secret-scan as a required PR check and proved it blocks a merge containing a fake credential (secret scanning, branch policies, DevSecOps); mapped to Robility PR validation pipelines.
