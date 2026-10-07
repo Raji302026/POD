@@ -29,3 +29,12 @@ Started: 2026-10-07
 - How it applies to Robility: put build validation branch policies on main of shared repos such as pipeline-templates so a broken template cannot merge, and keep the bypass list small.
 - Status: proven in a sandbox repo on GitHub; the Azure DevOps equivalent is not yet tried
 - Summary line for Webex: Practiced branch protection rulesets with a required status check and PR-based merging on GitHub (branch policies and build validation); mapped to Robility shared pipeline-templates repo.
+
+## 2026-10-07 - Scanning for secrets before pushing to a public repo, and organizing practice files
+- What it does: before pushing files to a public repo, search them for passwords, tokens and keys so nothing sensitive is published.
+- Commands I ran: gitleaks dir k8s-practice (the tool was not installed in this Codespace); used grep -rniE "password|passwd|token|api[_-]?key|secret|BEGIN .*PRIVATE KEY|AKIA[0-9A-Z]{16}" k8s-practice/ instead; moved 19 manifests into k8s-practice with mkdir and mv; committed them through PR 4 (check passed, merged).
+- What went wrong and how I fixed it: gitleaks was missing, so I used grep as a backup. I also mistyped git checkout main. with a dot, stayed on the wrong branch, and fixed it with git checkout main followed by git checkout -B to restart the branch from main.
+- Key learning: matches such as secretKeyRef are only names and are fine; a real value is the problem. A secret pushed to a public repo should be treated as leaked even if deleted later, so scan before the first push.
+- How it applies to Robility: add a secret-scanning step to PR validation pipelines so credentials are caught before code reaches main.
+- Status: tried (sandbox repo)
+- Summary line for Webex: Scanned Kubernetes manifests for secrets before publishing and organized them into a repo folder via a protected-branch PR (secret scanning, DevSecOps hygiene); mapped to Robility PR validation pipelines.
