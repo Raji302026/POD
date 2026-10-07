@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app-pod
+spec:
+  affinity:
+    podAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: app
+            operator: In
+            values:
+            - cache
+        topologyKey: "kubernetes.io/hostname"
+  containers:
+  - name: nginx
+    image: docker.io/library/nginx:latest
+    imagePullPolicy: IfNotPresent
