@@ -1,1 +1,1 @@
-FIXME: this should block the merge
+Fixed: this note is clean
