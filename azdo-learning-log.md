@@ -20,3 +20,12 @@ Started: 2026-10-07
 - How it applies to Robility: same filter-and-pick pattern for auditing failed pipeline runs; pinning the agent image (vmImage) in Azure DevOps pipelines avoids breakage when latest changes.
 - Status: tried (real runs on GitHub; Azure DevOps not yet)
 - Summary line for Webex: Practiced GitHub CLI (gh) workflow runs, jq filtering and manual workflow_dispatch triggers (CI/CD automation); mapped to Robility pipeline failure audit.
+
+## 2026-10-07 - Branch protection with a required status check (GitHub ruleset)
+- What it does: a ruleset on main requires changes to come through a pull request and requires the build-check status check to pass before merge. This is the GitHub equivalent of an Azure DevOps branch policy with build validation.
+- Commands I ran: created pr-check.yml (runs on pull_request, pinned to ubuntu-24.04); opened PR 1 (check passed, merged with gh pr merge 1 --merge); tried git push straight to main (rejected with GH013); opened PR 2 containing the forbidden word (check failed, mergeStateStatus BLOCKED, gh pr merge refused); read the failure with gh run view --log-failed; fixed it, check passed, merged.
+- What went wrong and how I fixed it: I left a quote open in a commit message and the terminal showed a > prompt; Ctrl+C cancelled it and I retyped the command. I also noticed gh offers an --admin flag to override a policy, which only works if the bypass list allows it.
+- Key learning: the merge commit keeps the branch history (seen with git log --graph). A required check should have run at least once before it can be selected in the ruleset.
+- How it applies to Robility: put build validation branch policies on main of shared repos such as pipeline-templates so a broken template cannot merge, and keep the bypass list small.
+- Status: proven in a sandbox repo on GitHub; the Azure DevOps equivalent is not yet tried
+- Summary line for Webex: Practiced branch protection rulesets with a required status check and PR-based merging on GitHub (branch policies and build validation); mapped to Robility shared pipeline-templates repo.
