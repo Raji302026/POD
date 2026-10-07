@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: anti-affinity-test
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: anti-affinity-test
+  template:
+    metadata:
+      labels:
+        app: anti-affinity-test
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - anti-affinity-test
+            topologyKey: "kubernetes.io/hostname"
+      containers:
+      - name: nginx
+        image: docker.io/library/nginx:latest
+        imagePullPolicy: IfNotPresent

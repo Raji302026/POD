@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: with-toleration-pod
+spec:
+  tolerations:
+  - key: "key1"
+    operator: "Equal"
+    value: "value1"
+    effect: "NoSchedule"
+  containers:
+  - name: nginx
+    image: docker.io/library/nginx:latest
+    imagePullPolicy: IfNotPresent
