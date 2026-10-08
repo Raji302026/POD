@@ -1,0 +1,41 @@
+name: speed-test
+on:
+  workflow_dispatch:
+jobs:
+  sequential:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Build three apps one after another
+        run: |
+          for app in portal docs designer; do
+            echo "Building $app"
+            sleep 20
+          done
+  parallel:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        app: [portal, docs, designer]
+    steps:
+      - name: Build one app
+        env:
+          APP: ${{ matrix.app }}
+        run: |
+          echo "Building $APP"
+          sleep 20
+  cached:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/cache@v4
+        id: deps
+        with:
+          path: deps
+          key: deps-v1
+      - name: Install dependencies (slow on a cache miss)
+        if: steps.deps.outputs.cache-hit != 'true'
+        run: |
+          mkdir deps
+          sleep 30
+          echo "installed" > deps/ready.txt
+      - name: Use dependencies
+        run: cat deps/ready.txt
