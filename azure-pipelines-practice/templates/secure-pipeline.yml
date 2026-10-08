@@ -1,0 +1,17 @@
+parameters:
+  - name: buildSteps
+    type: stepList
+    default: []
+
+stages:
+  - stage: Build
+    jobs:
+      - job: build
+        pool:
+          vmImage: ubuntu-24.04
+        steps:
+          - script: echo "MANDATORY - secret scan runs first"
+            displayName: Mandatory secret scan
+          - ${{ parameters.buildSteps }}
+          - script: echo "MANDATORY - publish compliance record"
+            displayName: Mandatory compliance step

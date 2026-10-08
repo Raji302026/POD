@@ -1,0 +1,8 @@
+trigger: none
+
+extends:
+  template: templates/secure-pipeline.yml
+  parameters:
+    buildSteps:
+      - script: echo "Team build step"
+        displayName: Team build

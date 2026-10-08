@@ -1,0 +1,21 @@
+trigger: none
+
+pool:
+  vmImage: ubuntu-24.04
+
+stages:
+  - stage: Build
+    jobs:
+      - job: portal
+        steps:
+          - template: templates/build-steps.yml
+            parameters:
+              appName: ticketing-portal
+              runTests: true
+      - job: docs
+        steps:
+          - template: templates/build-steps.yml
+            parameters:
+              appName: robility-docs
+              runTests: false
+              buildConfiguration: Debug
