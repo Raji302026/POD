@@ -1,0 +1,32 @@
+trigger: none
+
+pool:
+  vmImage: ubuntu-24.04
+
+stages:
+  - stage: Deploy
+    jobs:
+      - deployment: DeployCanary
+        environment: production
+        strategy:
+          canary:
+            increments: [10, 20]
+            preDeploy:
+              steps:
+                - script: echo "Prepare the canary"
+            deploy:
+              steps:
+                - script: echo "Deploy the new version to the canary slice"
+            routeTraffic:
+              steps:
+                - script: echo "Route traffic to the canary"
+            postRouteTraffic:
+              steps:
+                - script: echo "Monitor the canary health"
+            on:
+              failure:
+                steps:
+                  - script: echo "Roll back"
+              success:
+                steps:
+                  - script: echo "Canary succeeded"
