@@ -1,0 +1,21 @@
+name: reusable-build
+on:
+  workflow_call:
+    inputs:
+      app-name:
+        required: true
+        type: string
+      run-tests:
+        required: false
+        type: boolean
+        default: true
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show build info
+        run: echo "Building ${{ inputs.app-name }}"
+      - name: Run tests
+        if: ${{ inputs.run-tests }}
+        run: echo "Running tests for ${{ inputs.app-name }}"

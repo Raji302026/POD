@@ -1,0 +1,14 @@
+name: call-reusable
+on:
+  workflow_dispatch:
+jobs:
+  build-portal:
+    uses: ./.github/workflows/reusable-build.yml
+    with:
+      app-name: ticketing-portal
+      run-tests: true
+  build-docs:
+    uses: ./.github/workflows/reusable-build.yml
+    with:
+      app-name: robility-docs
+      run-tests: false
