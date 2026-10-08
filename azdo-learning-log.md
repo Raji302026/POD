@@ -57,3 +57,11 @@ Started: 2026-10-07
 - How it applies to Robility: Azure DevOps environments with approvals and checks gate deployments to SIT and Production, and this is the same pattern.
 - Status: proven in a sandbox repo on GitHub; Azure DevOps environments not yet tried
 - Summary line for Webex: Configured GitHub environments with required reviewers and ran a two-stage deploy that paused for production approval (deployment gates, approvals); mapped to Robility SIT and Production deployments.
+
+## 2026-10-08 - Reusable workflows with inputs (twin of Azure Pipelines templates)
+- What it does: A reusable workflow (`on: workflow_call`) declares inputs, and a caller workflow uses it with `uses:` and `with:`. One shared definition can run many times with different values, the same idea as `template:` with `parameters:` in Azure Pipelines.
+- Commands run: created `reusable-build.yml` (inputs `app-name` and `run-tests`) and `call-reusable.yml` (two calls: ticketing-portal with tests, robility-docs without). Merged through PR #11 with both required checks passing, then ran the caller. Verified with `gh run view <id> --json jobs --jq`: "Run tests" was `success` in build-portal and `skipped` in build-docs.
+- What went wrong and how I fixed it: nothing failed in this lab. Earlier cleanup typo (trailing dot in the branch name) was fixed by retyping the delete command without it.
+- How it applies to Robility: the shared pipeline-templates repo does the same job. Teams call one template with parameters instead of copying YAML, so a fix in one place reaches all callers. Next step is to compare with Azure Pipelines `template:` and `extends`.
+- Status: [x] tried
+- Summary line for Webex: "Practiced reusable workflows with inputs (twin of Azure Pipelines templates) and verified conditional steps with the GitHub CLI; mapped to Robility shared pipeline templates."
