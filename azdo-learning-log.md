@@ -105,3 +105,11 @@ Started: 2026-10-07
 - How it applies to Robility: production releases on Robility could use a canary or rolling strategy with a health check and an automatic rollback, instead of an all-at-once deploy. The environment approval stays as the gate before promotion.
 - Status: [x] tried (GitHub), [x] read only (Azure YAML, syntax checked offline)
 - Summary line for Webex: "Built and tested a canary release with health verification, approval-gated promotion and automatic rollback in GitHub Actions, and wrote the Azure Pipelines canary strategy YAML; mapped to Robility release practices."
+
+## 2026-10-08 - Faster pipelines: matrix builds and caching, measured
+- What it does: A matrix runs the same job for several values at the same time on separate runners, so wall-clock time drops. A cache saves a slow step's output, such as installed dependencies, and restores it on the next run. The Azure Pipelines equivalents are `strategy: matrix` with `maxParallel`, and the `Cache@2` task.
+- Commands run: wrote .github/workflows/speed-test.yml with three jobs (sequential, matrix, cached) using sleep to simulate work, merged through PR #27 and ran it twice from the browser. Measured each job with `gh run view <id> --json jobs --jq` using startedAt and completedAt. Sequential took 62 to 63 seconds, each matrix job took 22 to 24 seconds (about 2.7 times faster in wall-clock time for the same work), and the cached job took 34 seconds on a miss and 4 seconds on a hit.
+- What went wrong and how I fixed it: the total workflow time was 1m7s in both runs because the sequential job set the overall time, so the workflow total hid the differences. I measured per-job durations instead. I also miscounted the file lines when checking the paste, but the job list check was correct. The work is simulated with sleep, so real builds will differ.
+- How it applies to Robility: pipeline optimization across ~400 pipelines. Matrix builds shorten runs but use more parallel capacity, so check the agent pool size and parallel job limit first. Caching package restores saves time on every run, and the results should be measured per job, not by total time.
+- Status: [x] tried
+- Summary line for Webex: "Measured matrix builds and caching against a sequential baseline (about 2.7x faster wall-clock, cache saved 30s per run); mapped to Robility pipeline optimization."
