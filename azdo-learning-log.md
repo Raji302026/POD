@@ -65,3 +65,11 @@ Started: 2026-10-07
 - How it applies to Robility: the shared pipeline-templates repo does the same job. Teams call one template with parameters instead of copying YAML, so a fix in one place reaches all callers. Next step is to compare with Azure Pipelines `template:` and `extends`.
 - Status: [x] tried
 - Summary line for Webex: "Practiced reusable workflows with inputs (twin of Azure Pipelines templates) and verified conditional steps with the GitHub CLI; mapped to Robility shared pipeline templates."
+
+## 2026-10-08 - Variables, secrets and OIDC (twin of variable groups, secret variables and workload identity federation)
+- What it does: Repo variables are plain values, secrets are write-only and masked in logs, and OIDC lets a job prove its identity with a short-lived signed token instead of a stored password. Azure trusts the token by matching its issuer and subject.
+- Commands run: created variable APP_ENV and secret DEMO_SECRET (fake value), ran vars-and-secrets.yml and saw the variable in plain text and the secret as *** with length 21. Ran oidc-claims.yml with `permissions: id-token: write` and printed only the claims (iss, sub, aud, repository, ref). Merged through PRs #13 and #14.
+- What went wrong and how I fixed it: pasted the placeholder `<ID>` and `12345` into `gh run view`, which gave a shell error and HTTP 404. Fixed by running `gh run list` first and using the real run ID. Also ran the log command before clicking Run workflow, which returned "no runs found".
+- How it applies to Robility: service connections that use a client secret can expire and break pipelines. Workload identity federation removes the secret. Secret variables in variable groups should be mapped into env explicitly, and the token itself must never be printed.
+- Status: [x] tried
+- Summary line for Webex: "Practiced repo variables, masked secrets and OIDC token claims (twin of variable groups and workload identity federation); mapped to Robility service connections."
