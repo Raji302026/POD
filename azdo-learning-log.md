@@ -73,3 +73,11 @@ Started: 2026-10-07
 - How it applies to Robility: service connections that use a client secret can expire and break pipelines. Workload identity federation removes the secret. Secret variables in variable groups should be mapped into env explicitly, and the token itself must never be printed.
 - Status: [x] tried
 - Summary line for Webex: "Practiced repo variables, masked secrets and OIDC token claims (twin of variable groups and workload identity federation); mapped to Robility service connections."
+
+## 2026-10-08 - Azure Pipelines YAML offline: templates, parameters and extends
+- What it does: A steps template declares typed parameters (string, boolean, stepList) with defaults and allowed values, and a pipeline inserts it with `- template:`. With `extends:`, the pipeline must run inside a parent template that wraps the team's steps with mandatory ones (for example a secret scan), so teams cannot skip them. `${{ if }}` is a compile-time condition, so a false condition removes the step from the pipeline entirely, unlike a GitHub Actions `if:` which skips at runtime.
+- Commands run: wrote azure-pipelines-practice/ with templates/build-steps.yml, azure-pipelines.yml (two template calls with different parameters), templates/secure-pipeline.yml and azure-pipelines-extends.yml. Checked all four files parse as YAML with PyYAML.
+- What went wrong and how I fixed it: a long paste was cut off and repeated, leaving the shell mid-heredoc. Fixed with Ctrl+C and `ls` to see which files existed. Limitation: this only proves the YAML syntax is valid. I could not run the pipelines in Azure DevOps, so the schema and behavior are untested.
+- How it applies to Robility: the shared pipeline-templates repo can use `extends` so every pipeline gets the same mandatory steps. In Azure DevOps, pair it with a Required template check on environments or service connections so pipelines that do not extend the approved template are blocked.
+- Status: [x] read only  [x] tried (syntax only)  [ ] proven in sandbox
+- Summary line for Webex: "Wrote Azure Pipelines templates with typed parameters and an extends template that enforces mandatory steps (syntax checked offline); mapped to Robility shared pipeline templates."

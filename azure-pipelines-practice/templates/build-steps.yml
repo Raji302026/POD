@@ -1,0 +1,19 @@
+parameters:
+  - name: appName
+    type: string
+  - name: runTests
+    type: boolean
+    default: true
+  - name: buildConfiguration
+    type: string
+    default: Release
+    values:
+      - Debug
+      - Release
+
+steps:
+  - script: echo "Building ${{ parameters.appName }} in ${{ parameters.buildConfiguration }}"
+    displayName: Build ${{ parameters.appName }}
+  - ${{ if eq(parameters.runTests, true) }}:
+    - script: echo "Running tests for ${{ parameters.appName }}"
+      displayName: Run tests
