@@ -1,0 +1,51 @@
+name: deploy-canary
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to release
+        required: true
+        default: v1.1.0
+      canary_healthy:
+        description: Simulate a healthy canary
+        type: boolean
+        default: true
+jobs:
+  canary:
+    runs-on: ubuntu-24.04
+    environment: staging
+    steps:
+      - name: Route 5 percent of traffic
+        env:
+          VERSION: ${{ inputs.version }}
+        run: echo "Routing 5% of traffic to $VERSION"
+  verify:
+    needs: canary
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check canary health
+        env:
+          HEALTHY: ${{ inputs.canary_healthy }}
+        run: |
+          if [ "$HEALTHY" = "true" ]; then
+            echo "Error rate 0.1 percent, within limit"
+          else
+            echo "Error rate 8 percent, above limit"
+            exit 1
+          fi
+  promote:
+    needs: verify
+    runs-on: ubuntu-24.04
+    environment: production
+    steps:
+      - name: Promote to all traffic
+        env:
+          VERSION: ${{ inputs.version }}
+        run: echo "Promoting $VERSION to 100% of traffic"
+  rollback:
+    needs: verify
+    if: failure()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Roll back
+        run: echo "Rolling back, routing 100% of traffic to the previous version"
