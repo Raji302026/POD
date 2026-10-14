@@ -214,3 +214,38 @@ Honest limits:
 Status: done.
 
 Webex summary: Practiced Kubernetes troubleshooting (ImagePullBackOff, CrashLoopBackOff, Pending) using describe and logs on a local cluster.
+
+## 2026-10-14: Observability with Prometheus alert rules
+
+What it does:
+- Prometheus scrapes metrics from targets on an interval and stores them. The up metric is 1 when a target is reachable and 0 when it is not.
+- Alert rules are code: an expression plus a for: duration. An alert moves from inactive to pending to firing.
+- promtool (inside the Prometheus image) validates rules and config before they run.
+
+Commands run:
+- docker pull prom/prometheus, promtool check rules and check config via docker run.
+- Started Prometheus in a container and queried the HTTP API with curl (up, /api/v1/rules, /api/v1/alerts).
+- Added a fake target on port 9999. up went to 0 and TargetDown went pending then firing.
+- Added a prometheus-check PR workflow (promtool check rules and check config).
+- Broke an alert expression on purpose (up ==). promtool failed locally and in CI with a parse error naming the file, line, group and rule; the other checks stayed green. Fixed it and the check passed.
+
+What went wrong:
+- The alert did not fire right away. Rules are evaluated every evaluation_interval (default 1 minute), so pending then firing took a couple of minutes even with for: 15s.
+- The alert summary text said "5 minutes" after I changed the rule to 15s. Annotations should not hard-code durations.
+- curl prints no final newline, so the next prompt landed on the same line; adding echo after curl fixes it.
+- The check uses prom/prometheus:latest. It should be pinned to a version or digest so a new release cannot change the check silently.
+
+Concepts for interviews:
+- Metrics, logs and traces are the three pillars; metrics for trends and alerts, logs for detail, traces for request paths.
+- SLI is what you measure (for example the percentage of successful pipeline runs), SLO is the target (for example 99 percent), SLA is the promise to a customer with consequences.
+- Alert on symptoms (target down, restarts, error rate), not on every CPU spike, and use a for: time to avoid noisy alerts.
+
+Robility application:
+- Alerts for container restarts (CrashLoopBackOff from the Kubernetes lab) and for agent or service targets going down, validated in the PR like any other code.
+
+Honest limits:
+- Prometheus ran locally against itself and one fake target. No Alertmanager, no Grafana, and no Azure Monitor or KQL (no subscription in this lab).
+
+Status: done.
+
+Webex summary: Practiced Prometheus alert rules (scrape, up metric, pending and firing alerts) and added a promtool validation check to the PR pipeline gate.
