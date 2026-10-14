@@ -1,0 +1,18 @@
+name: prometheus-check
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  prometheus-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check alert rules
+        run: docker run --rm --entrypoint promtool -v "$PWD/observability-practice":/cfg prom/prometheus:latest check rules /cfg/alerts.yml
+      - name: Check config
+        run: docker run --rm --entrypoint promtool -v "$PWD/observability-practice":/cfg prom/prometheus:latest check config /cfg/prometheus.yml

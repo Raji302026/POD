@@ -1,0 +1,17 @@
+groups:
+  - name: robility-practice
+    rules:
+      - alert: TargetDown
+        expr: up == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Target {{ $labels.instance }} has been down for 5 minutes"
+      - alert: PodRestartingTooOften
+        expr: increase(kube_pod_container_status_restarts_total[15m]) > 3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.container }} restarted more than 3 times in 15 minutes"
