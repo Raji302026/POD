@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crash-loop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: crash-loop
+  template:
+    metadata:
+      labels:
+        app: crash-loop
+    spec:
+      containers:
+        - name: app
+          image: busybox:1.36
+          command: ["sh", "-c", "if [ -z \"$DB_URL\" ]; then echo 'fatal: DB_URL is not set' >&2; exit 1; fi; echo \"app started with $DB_URL\"; sleep 3600"]
+          env:
+            - name: DB_URL
+              value: "postgres://fake-host/practice"

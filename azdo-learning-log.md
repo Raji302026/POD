@@ -181,3 +181,36 @@ Honest limits:
 Status: done.
 
 Webex summary: Practiced Bicep (lint, build, parameter validation) and added a Bicep validation check to the PR pipeline gate.
+
+## 2026-10-14: Kubernetes debugging (pod failures)
+
+What it does:
+- Practiced the debug routine on a local kind cluster: kubectl get pods (status), describe (events), logs, and logs --previous for crashes.
+- Reproduced three failures: ImagePullBackOff, CrashLoopBackOff, Pending.
+
+Commands run:
+- kind create cluster, kubectl apply, get, describe, logs, set image, rollout restart, delete.
+- ImagePullBackOff: the event showed a DNS i/o timeout to registry-1.docker.io, not only a bad tag. A valid tag failed too, so the cause was the node network, not the manifest.
+- CrashLoopBackOff: logs showed "fatal: DB_URL is not set" and describe showed Exit Code 1. Fixed by adding the env value in the manifest and re-applying.
+- Pending: the event showed Insufficient cpu and memory because the pod requested 64 CPU and 256Gi.
+
+What went wrong:
+- kind load docker-image failed with "content digest not found" (multi-architecture image). Fixed by docker save --platform linux/amd64 and kind load image-archive.
+- I interrupted kind create cluster with Ctrl+C by typing while it was still pulling the node image; deleting and recreating it fixed that.
+- kubectl was pointing at an old cluster until the new context was set.
+
+Debug routine to remember:
+- get pods for status, describe pod for the Events section, logs for the app output, logs --previous for a crashed container.
+- ImagePullBackOff: wrong tag, registry login, or network/DNS. Read the event text.
+- CrashLoopBackOff: read the logs and exit code.
+- Pending: read the scheduler event (Insufficient cpu or memory, taints, or an unbound volume).
+
+Robility application:
+- Same routine applies to Harmony and other containers: check status, events and logs before changing anything, then fix the cause in the manifest or pipeline and redeploy.
+
+Honest limits:
+- Local kind cluster only. No AKS, no ingress, and no production incident handled this way.
+
+Status: done.
+
+Webex summary: Practiced Kubernetes troubleshooting (ImagePullBackOff, CrashLoopBackOff, Pending) using describe and logs on a local cluster.
