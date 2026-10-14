@@ -1,0 +1,26 @@
+name: bicep-check
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  bicep-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Bicep
+        run: |
+          curl -fsSLo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
+          chmod +x bicep
+          sudo mv bicep /usr/local/bin/bicep
+          bicep --version
+      - name: Lint
+        working-directory: bicep-practice
+        run: bicep lint storage.bicep
+      - name: Build
+        working-directory: bicep-practice
+        run: bicep build storage.bicep
