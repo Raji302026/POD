@@ -1,0 +1,24 @@
+name: terraform-check
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  terraform-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v3
+      - name: Format check
+        working-directory: terraform-practice
+        run: terraform fmt -check -diff
+      - name: Init
+        working-directory: terraform-practice
+        run: terraform init -backend=false
+      - name: Validate
+        working-directory: terraform-practice
+        run: terraform validate
