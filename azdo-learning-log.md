@@ -121,3 +121,34 @@ Started: 2026-10-07
 - How it applies to Robility: this feeds the AKS ephemeral agents spike. Ephemeral agents avoid state leaking between pipelines, and the same least-privilege rules apply to agent pools and service connections in Azure DevOps. I did not run a real self-hosted runner, so this is read only for runners.
 - Status: [x] read only (runners), [x] tried (settings hardening)
 - Summary line for Webex: "Reviewed self-hosted and ephemeral runner security and hardened Actions settings (read-only token, outside contributor approval); mapped to the Robility AKS ephemeral agents spike."
+
+## 2026-10-14: Infrastructure as Code with Terraform
+
+What it does:
+- Terraform describes infrastructure in files, then previews (plan) and creates (apply) it. A state file maps the code to what exists.
+- Practiced with the built-in terraform_data resource, so nothing was created in any cloud.
+
+Commands run:
+- terraform init, fmt, validate, plan, plan -var="environment=prod", apply, then plan again (No changes).
+- git check-ignore -v terraform.tfstate to prove state is not committed.
+- Added a terraform-check PR workflow (fmt -check, init -backend=false, validate).
+
+What went wrong:
+- I typed the RUNID placeholder literally in gh run view. Fixed by using the real ID from gh run list.
+- I said a plan would show the output value, but it shows (known after apply) until apply.
+
+Proof the gate works:
+- I pushed a badly formatted line on purpose. terraform-check failed (fmt exit code 3), the other checks stayed green.
+- I ran terraform fmt locally, removed the test line, and the check passed again.
+
+Robility application:
+- Same pattern for Azure resources: fmt and validate on every PR, plan reviewed before approval, apply only from main after an environment approval.
+- State would live in a remote backend (Azure storage account with locking), never in Git.
+- Required checks must not use path filters, or PRs that skip the filter wait forever.
+
+Honest limits:
+- No real Azure resources, no remote backend, and no Bicep yet. Apply ran only on a built-in resource.
+
+Status: done.
+
+Webex summary: Practiced Terraform (init, validate, plan, state) and added a Terraform validation check to the PR pipeline gate.
