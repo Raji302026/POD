@@ -152,3 +152,32 @@ Honest limits:
 Status: done.
 
 Webex summary: Practiced Terraform (init, validate, plan, state) and added a Terraform validation check to the PR pipeline gate.
+
+## 2026-10-14: Infrastructure as Code with Bicep
+
+What it does:
+- Bicep is Azure's own language for infrastructure. It compiles to an ARM template (JSON) that Azure deploys. It has no state file because Azure Resource Manager tracks what is deployed.
+- Wrote a storage account with param, var, resource and output, plus secure settings: HTTPS only, TLS 1.2 minimum, no public blob access.
+
+Commands run:
+- bicep --version, bicep lint, bicep build, and head on the compiled storage.json.
+- Added a bicep-check PR workflow (install Bicep, lint, build).
+- Changed the environment default to an invalid value (qa) and bicep build failed with BCP033, caught by the @allowed decorator before any deployment.
+
+What went wrong:
+- az was not installed in the Codespace. I used the standalone Bicep CLI instead, which is enough for lint and build.
+
+Terraform vs Bicep:
+- Terraform: multi-cloud, has a state file, preview with plan.
+- Bicep: Azure only, no state file, preview with az deployment group what-if.
+
+Robility application:
+- Same PR-gate pattern for Azure resources: lint and build on every PR so invalid templates cannot merge.
+- Secure defaults (TLS, no public access) can be enforced in the template, which also supports VAPT remediation.
+
+Honest limits:
+- Nothing was deployed. what-if was not run because there is no Azure subscription in this lab.
+
+Status: done.
+
+Webex summary: Practiced Bicep (lint, build, parameter validation) and added a Bicep validation check to the PR pipeline gate.
