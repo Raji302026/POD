@@ -2,7 +2,7 @@ groups:
   - name: robility-practice
     rules:
       - alert: TargetDown
-        expr: up == 0
+        expr: up ==
         for: 5m
         labels:
           severity: critical
