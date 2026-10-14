@@ -21,4 +21,3 @@ resource "terraform_data" "app" {
 output "app_id" {
   value = terraform_data.app.output
 }
-variable "bad"   {  type=string }
