@@ -10,8 +10,13 @@ stages:
         pool:
           vmImage: ubuntu-24.04
         steps:
-          - script: echo "MANDATORY - secret scan runs first"
+          - checkout: self
+          - script: |
+              echo "Running secret scan"
+              docker run --rm -v "$(Build.SourcesDirectory)":/repo zricethezav/gitleaks:latest detect --source /repo --no-git --verbose
             displayName: Mandatory secret scan
           - ${{ parameters.buildSteps }}
-          - script: echo "MANDATORY - publish compliance record"
+          - script: |
+              echo "Compliance record: build $(Build.BuildId) result $(Agent.JobStatus)"
             displayName: Mandatory compliance step
+            condition: always()
