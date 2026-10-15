@@ -415,3 +415,32 @@ Webex summary: Practiced Terraform modules for dev and prod, the moved block for
 **Status:** Template updated, PR #41.
 
 **Webex summary:** Extended the Azure Pipelines secure template: real secret scan, compliance step always runs. Reviewed how extends and required checks enforce it.
+
+## Module 14: Terraform state commands (Oct 15)
+
+**What it does:** State is how Terraform maps code to real objects. The state commands fix that mapping without touching the real objects.
+
+**Commands run (in a scratch folder outside the repo):**
+- `terraform state list` and `terraform state show` to inspect what is tracked.
+- Renamed a resource in code only. The plan showed 1 to destroy and 1 to add.
+- `terraform state mv` moved the state entry to the new name. The plan then showed no changes and the id stayed the same.
+- `terraform state rm` made Terraform forget a resource without deleting it. The plan then wanted to create it again, because the code still declared it.
+- `terraform import` adopted the object back into state.
+
+**What went wrong:** I expected `No changes` after the import. The plan showed an in-place update, because `terraform_data` keeps `input` only in state, so the import could not bring it in. Lesson: after an import, read the first plan carefully and reconcile code and real settings before applying.
+
+**Robility application:** If a Terraform resource is renamed or moved into a module, a plan that shows destroy plus create must be stopped in review. Fix it with a `moved` block in the PR, or `state mv` when the code cannot change.
+
+**Interview answers:**
+- Rename shows destroy and create: do not apply. Add a `moved` block, or run `state mv`, then confirm the plan says no changes.
+- `state rm` does not delete real resources. The code must also be changed, or the resource is created again as a duplicate.
+- `import` adopts an existing object, but the first plan can still show differences. Read them before applying.
+
+**Honest limits:**
+- Done on the built-in `terraform_data` resource with local state, not on real Azure resources.
+- No remote backend, locking or workspaces were used.
+- Back up real state before any `state mv` or `state rm`.
+
+**Status:** Lab done in a scratch folder and cleaned up, PR pending.
+
+**Webex summary:** Practised Terraform state commands: state list/show, state mv for renames, state rm and import. Learned to stop destroy-and-create plans in review.
