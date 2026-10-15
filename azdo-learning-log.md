@@ -360,3 +360,34 @@ Honest limits:
 Status: done.
 
 Webex summary: Practiced Kubernetes deployments (Service, probes, resource limits, rolling update and rollback) on a local cluster.
+
+## 2026-10-15: Terraform modules, environments and the moved block
+
+What it does:
+- A module is a reusable folder of Terraform code with variables as inputs and outputs as results. One module (terraform-modules/app) was called twice from terraform-envs, for dev and prod, with different inputs.
+- terraform plan shows what would change; the state maps module and resource addresses to real resources.
+
+Commands run:
+- terraform init, fmt, validate, plan, apply for a root that calls the module twice; terraform state list and terraform output.
+- Renamed module "prod" to "production". The plan wanted to destroy module.prod and create module.production (1 to add, 1 to destroy), because the state knew the resource only by its old name.
+- Added a moved block (from module.prod to module.production). The plan became 0 to add, 0 to change, 0 to destroy, the resource ID stayed the same, and terraform apply recorded the move in the state.
+- Extended the terraform-check workflow: fmt -check -recursive for all folders, then init -backend=false and validate for each root folder.
+
+What went wrong:
+- After renaming the module, terraform plan failed with "Module not installed". A new module name needs terraform init again.
+- The first plan after the rename looked harmless in the code but would have destroyed and recreated the resource, which is why the plan must be read in review.
+
+Interview answers:
+- Several environments: one module called per environment with different inputs (or separate state per environment), so the same code is reused and only variables differ.
+- Renaming safely: use a moved block or terraform state mv; otherwise Terraform destroys the old address and creates the new one.
+- State for a team: a remote backend (for example an Azure storage account with locking), never in Git. Also read the plan in the pull request and apply only from main after approval.
+
+Robility application:
+- Same shape as shared pipeline templates: one reviewed module, many environments, and checks that block bad changes before merge.
+
+Honest limits:
+- Used the built-in terraform_data resource only. No real Azure resources, no remote backend, and no import or workspace practice.
+
+Status: done.
+
+Webex summary: Practiced Terraform modules for dev and prod, the moved block for safe renames, and extended the PR check to validate all Terraform folders.

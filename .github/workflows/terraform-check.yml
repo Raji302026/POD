@@ -14,11 +14,11 @@ jobs:
       - uses: actions/checkout@v7
       - uses: hashicorp/setup-terraform@v4
       - name: Format check
-        working-directory: terraform-practice
-        run: terraform fmt -check -diff
-      - name: Init
-        working-directory: terraform-practice
-        run: terraform init -backend=false
-      - name: Validate
-        working-directory: terraform-practice
-        run: terraform validate
+        run: terraform fmt -check -recursive -diff
+      - name: Validate each root
+        run: |
+          for dir in terraform-practice terraform-envs; do
+            echo "Checking $dir"
+            terraform -chdir=$dir init -backend=false
+            terraform -chdir=$dir validate
+          done
