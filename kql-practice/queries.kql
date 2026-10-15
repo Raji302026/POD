@@ -1,0 +1,36 @@
+// 1. Which pipelines failed most in the last 24 hours?
+// PipelineRuns is an EXAMPLE table, not a built-in Azure table.
+PipelineRuns
+| where Result == "failed" and TimeGenerated > ago(24h)
+| summarize FailedRuns = count() by PipelineName
+| order by FailedRuns desc
+| take 10
+
+// 2. Which containers restarted more than 3 times in the last hour?
+// KubePodInventory is a real Container Insights table.
+KubePodInventory
+| where TimeGenerated > ago(1h)
+| summarize MaxRestarts = max(ContainerRestartCount) by Name
+| where MaxRestarts > 3
+| order by MaxRestarts desc
+
+// 3. Which servers have stopped sending a heartbeat for 10 minutes?
+// Heartbeat is a real table written by the monitoring agent.
+Heartbeat
+| summarize LastSeen = max(TimeGenerated) by Computer
+| where LastSeen < ago(10m)
+| order by LastSeen asc
+
+// 4. Top 5 computers by heartbeat count in the last hour
+Heartbeat
+| where TimeGenerated > ago(1h)
+| summarize Beats = count() by Computer
+| order by Beats desc
+| take 5
+
+// 5. Pods with more than 5 restarts in the last 24 hours
+KubePodInventory
+| where TimeGenerated > ago(24h)
+| summarize MaxRestarts = max(ContainerRestartCount) by Name
+| where MaxRestarts > 5
+| project Name, MaxRestarts

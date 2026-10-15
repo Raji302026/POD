@@ -305,3 +305,26 @@ Honest limits:
 Status: done.
 
 Webex summary: Reviewed and merged Dependabot major version updates after checking release notes, diffs and a manual verification run.
+
+## 2026-10-15: Azure Monitor and KQL basics
+
+What it does:
+- Azure Monitor stores logs in a Log Analytics workspace, in tables such as Heartbeat and KubePodInventory. KQL reads like a pipeline: start with a table and pipe through where, summarize, project, order by and take.
+- where filters rows (filter raw columns before summarize), summarize groups and aggregates, and a where after summarize filters on the computed value, like HAVING in SQL. ago(1h) means one hour back.
+
+Commands run:
+- Wrote five queries in kql-practice/queries.kql: failed pipelines per day (example table), containers restarting more than 3 times, servers with no heartbeat for 10 minutes, top 5 computers by heartbeat count, and pods with more than 5 restarts in 24 hours.
+
+What went wrong:
+- Fill-in-the-blank text pasted into the terminal went into the file literally (twice), so I removed those lines with head -n and added the finished queries.
+- The project operator in my last query was redundant, because summarize already outputs only the grouped and computed columns.
+
+Robility application:
+- The same questions map to alerts: which pipelines fail most, which containers keep restarting (like the CrashLoopBackOff lab), and which servers stopped reporting.
+
+Honest limits:
+- No Azure subscription or Log Analytics workspace, so none of these queries were run. PipelineRuns is an example table, not a built-in one. Table and column names should be checked against a real workspace.
+
+Status: done.
+
+Webex summary: Learned Azure Monitor and KQL basics and wrote five practice queries for pipeline failures, container restarts and server heartbeats.
