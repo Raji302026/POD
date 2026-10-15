@@ -26,7 +26,7 @@ jobs:
   cached:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         id: deps
         with:
           path: deps
