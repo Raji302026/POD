@@ -13,6 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Check alert rules
-        run: docker run --rm --entrypoint promtool -v "$PWD/observability-practice":/cfg prom/prometheus:latest check rules /cfg/alerts.yml
+        run: docker run --rm --entrypoint promtool -v "$PWD/observability-practice":/cfg prom/prometheus:v3.15.0 check rules /cfg/alerts.yml
       - name: Check config
-        run: docker run --rm --entrypoint promtool -v "$PWD/observability-practice":/cfg prom/prometheus:latest check config /cfg/prometheus.yml
+        run: docker run --rm --entrypoint promtool -v "$PWD/observability-practice":/cfg prom/prometheus:v3.15.0 check config /cfg/prometheus.yml
