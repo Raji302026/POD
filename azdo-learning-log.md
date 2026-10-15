@@ -249,3 +249,36 @@ Honest limits:
 Status: done.
 
 Webex summary: Practiced Prometheus alert rules (scrape, up metric, pending and firing alerts) and added a promtool validation check to the PR pipeline gate.
+
+## 2026-10-15: Git for interviews (conflicts, rebase, revert, reflog)
+
+What it does:
+- Practiced on a throwaway local repo (not the real repo) so main was never at risk.
+- Merge keeps the branch history and adds a merge commit; rebase replays commits on top of the latest main for a straight line, and rewrites the commit IDs.
+- revert adds a new commit that undoes an earlier one and is safe on shared branches; reset --hard moves the branch back and discards changes, so it is only for local work.
+- reflog records where HEAD has been, so a commit that looks lost after reset can usually be recovered.
+
+Commands run:
+- Created two branches that changed the same line, merged them, and got CONFLICT (content). Read the markers (HEAD side, =======, other side), edited the file to the final value, checked no markers remained with grep, then git add and git commit.
+- git rebase main on a feature branch; the commit ID changed (5306f42 to 29307fe) and the history became a straight line.
+- Committed a mistake, undid it with git revert HEAD, and saw both commits remain in history.
+- Made a commit, destroyed it with git reset --hard HEAD~1, found it with git reflog, and restored it with git reset --hard HEAD@{1}.
+
+What went wrong:
+- Nothing failed this time. The conflict was created on purpose, and the first reflog attempt just needed me to read the entries before restoring.
+
+Interview answers:
+- Merge vs rebase: merge preserves history, rebase gives a linear history; never rebase commits others already have.
+- Reset vs revert: revert is safe on shared branches because it adds a commit; reset rewrites history, so use it only on local work.
+- If I think I lost a commit: git reflog, find the commit, then git reset --hard to that entry or create a branch at it.
+- Merge conflict routine: read the markers, decide the final content (ask the authors if unsure), remove all markers, git add, git commit. git merge --abort is the safe exit.
+
+Robility application:
+- Same routine applies to pipeline YAML conflicts in the shared pipeline-templates repo; protected branches and pull requests mean mistakes are undone with revert, not force pushes.
+
+Honest limits:
+- Practiced locally in a scratch repo. No force push, no remote history rewrite, and no team conflicts.
+
+Status: done.
+
+Webex summary: Practiced Git for DevOps work (merge conflicts, rebase, revert, reset and reflog recovery) in a safe scratch repo.
