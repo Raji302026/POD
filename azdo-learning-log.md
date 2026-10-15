@@ -391,3 +391,27 @@ Honest limits:
 Status: done.
 
 Webex summary: Practiced Terraform modules for dev and prod, the moved block for safe renames, and extended the PR check to validate all Terraform folders.
+
+## Module 13: Secure pipeline template with extends (Oct 15)
+
+**What it does:** An `extends` template locks the pipeline structure (pool, stages, mandatory steps). Teams pass only a `stepList` parameter, so they cannot remove the secret scan or the compliance step.
+
+**Commands run:**
+- Read `azure-pipelines-extends.yml` (consumer) and `templates/secure-pipeline.yml` (enforcer).
+- Replaced the echo placeholder with a real gitleaks scan via docker.
+- Added `condition: always()` to the compliance step so it runs even when a team step fails.
+- Checked the YAML parses with Python (4 steps found).
+
+**What went wrong:** I wrote `gh pr checks NN --watch` with a placeholder instead of the PR number 41. Fixed by using the real number.
+
+**Robility application:** Shared templates in pipeline-templates can be made mandatory with an extends template, so security steps cannot be skipped by individual teams.
+
+**Honest limits:**
+- Not run in Azure DevOps (no access from the work network). Only YAML parsing was checked.
+- None of the GitHub checks cover this folder, so green checks prove nothing about it.
+- Enforcing that teams must use the template needs the "Extends template required check" on the environment or service connection, which is a portal setting, not YAML.
+- The gitleaks image uses `latest`, which should be pinned in real use.
+
+**Status:** Template updated, PR #41.
+
+**Webex summary:** Extended the Azure Pipelines secure template: real secret scan, compliance step always runs. Reviewed how extends and required checks enforce it.
