@@ -1,0 +1,18 @@
+name: helm-check
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  helm-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Lint and render each environment
+        run: |
+          for env in dev prod; do
+            echo "Checking $env"
+            helm lint helm-practice/webapp -f helm-practice/webapp/values-$env.yaml
+            helm template demo helm-practice/webapp -f helm-practice/webapp/values-$env.yaml > /dev/null
+          done

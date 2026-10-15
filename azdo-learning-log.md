@@ -444,3 +444,34 @@ Webex summary: Practiced Terraform modules for dev and prod, the moved block for
 **Status:** Lab done in a scratch folder and cleaned up, PR pending.
 
 **Webex summary:** Practised Terraform state commands: state list/show, state mv for renames, state rm and import. Learned to stop destroy-and-create plans in review.
+
+## Module 15: Helm chart with per-environment values (Oct 15)
+
+**What it does:** A Helm chart packages Kubernetes manifests as templates with placeholders. One chart serves every environment, and a values file per environment changes only what differs.
+
+**Commands run:**
+- `helm create webapp` generated a starter chart.
+- `helm lint` checked the chart for errors.
+- `helm template demo webapp` rendered the final YAML locally, with no cluster. The release name filled the `{{ }}` placeholders.
+- Created `values-dev.yaml` (1 replica) and `values-prod.yaml` (3 replicas), then rendered both and compared them with `diff`. Only the replica count differed.
+- Added `helm-check.yml` so every PR lints and renders the chart for each environment.
+- Pushed a deliberately broken values file. `helm-check` failed (the other 7 checks stayed green). Fixed with `git revert`, not a reset, because the bad commit was already pushed.
+
+**What went wrong:** I expected `[ERROR]` output from lint, but Helm failed earlier while parsing the YAML. The image tag was empty by default and silently fell back to the chart `appVersion`, so I set the tag explicitly in each values file.
+
+**Robility application:** The same pattern fits many services with the same shape: one chart, with a values file per environment (Development, Testing, SIT, Production). A CI check that lints and renders each values file catches broken charts before deployment.
+
+**Interview answers:**
+- Helm vs raw manifests: templates remove copy-paste between environments, and a values file shows exactly what differs.
+- How to review a chart change: render with `helm template` for each environment and diff the output.
+- Chart versioning: bump `version` when the chart changes, and `appVersion` for the app.
+
+**Honest limits:**
+- Nothing was installed on a cluster. Only lint and template were used, so no `helm install`, `upgrade` or `rollback` was practised.
+- No chart repository, OCI registry or dependency charts were used.
+- `helm-check` is not a required check in the ruleset yet.
+- Starter-chart files such as the ingress, hpa and httproute templates were left unmodified.
+
+**Status:** Chart and CI check added, PR #43.
+
+**Webex summary:** Built a Helm chart with dev and prod values, rendered and compared them locally, and added a CI check that fails on a broken chart.
