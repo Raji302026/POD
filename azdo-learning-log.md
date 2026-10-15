@@ -475,3 +475,35 @@ Webex summary: Practiced Terraform modules for dev and prod, the moved block for
 **Status:** Chart and CI check added, PR #43.
 
 **Webex summary:** Built a Helm chart with dev and prod values, rendered and compared them locally, and added a CI check that fails on a broken chart.
+
+## Module 16: Helm release lifecycle on kind (Oct 15)
+
+**What it does:** Helm tracks every install and upgrade as a numbered revision, so a bad release can be rolled back without redeploying by hand.
+
+**Commands run:**
+- Created a kind cluster and loaded `nginx:1.27-alpine` with `docker save` and `kind load image-archive`, because the node cannot reach Docker Hub.
+- `helm install web helm-practice/webapp -f values-dev.yaml` gave revision 1 with 1 pod.
+- `helm upgrade` with `values-prod.yaml` gave revision 2 and scaled to 3 pods.
+- Upgraded with a tag that does not exist and `--wait --timeout 40s`. It failed (revision 3), the 3 old pods kept serving, and revision 2 stayed deployed.
+- `helm rollback web 2` created revision 4 (`Rollback to 2`). Failed revisions stay in history.
+- Repeated the bad upgrade with `--atomic`. Helm rolled back by itself to the last good revision (4) with no one watching.
+
+**What went wrong:** I expected `ErrImagePull` on the broken pod, but it was still in `ContainerCreating` when I looked. `helm uninstall` at the end failed with "cluster unreachable" because kubectl had no current context. I did not find out why. Deleting the cluster removed the release anyway.
+
+**Robility application:** For a service deployed to Development and Testing, `helm upgrade --atomic --timeout` in a pipeline stage gives a safe default: a release that never becomes ready is rolled back automatically, and the history records why.
+
+**Interview answers:**
+- Upgrade fails halfway: with `--wait` or `--atomic`, Helm marks the revision `failed`. The old pods keep serving until the new ones are ready.
+- Rollback: `helm rollback RELEASE REVISION` creates a new revision, so history is never rewritten.
+- `--wait` only reports failure. `--atomic` also rolls back for you, which suits pipelines.
+- Always set `--timeout`, or a stuck release hangs the pipeline for a long time.
+
+**Honest limits:**
+- Local kind cluster only, one release, one namespace, an nginx image from the local machine.
+- No Helm repository, OCI registry, chart dependencies or Helm hooks.
+- No AKS, no Azure DevOps deployment task and no Helm secrets or values from Key Vault.
+- A rollback restores the Kubernetes objects but never data, so databases need their own backup plan.
+
+**Status:** Lab done and cluster deleted, PR pending.
+
+**Webex summary:** Practised the Helm release lifecycle on kind: install, upgrade, failed upgrade, manual rollback and automatic rollback with --atomic.
