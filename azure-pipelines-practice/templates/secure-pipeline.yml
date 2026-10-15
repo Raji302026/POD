@@ -13,7 +13,7 @@ stages:
           - checkout: self
           - script: |
               echo "Running secret scan"
-              docker run --rm -v "$(Build.SourcesDirectory)":/repo zricethezav/gitleaks:latest detect --source /repo --no-git --verbose
+              docker run --rm -v "$(Build.SourcesDirectory)":/repo zricethezav/gitleaks:v8.30.1 detect --source /repo --no-git --verbose
             displayName: Mandatory secret scan
           - ${{ parameters.buildSteps }}
           - script: |
