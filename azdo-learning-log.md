@@ -282,3 +282,26 @@ Honest limits:
 Status: done.
 
 Webex summary: Practiced Git for DevOps work (merge conflicts, rebase, revert, reset and reflog recovery) in a safe scratch repo.
+
+## 2026-10-15: Reviewing Dependabot major version PRs
+
+What it does:
+- Dependabot opened two weekly PRs: hashicorp/setup-terraform 3 to 4 and actions/cache 4 to 6. Both were major version bumps, so I reviewed them instead of merging on green checks alone.
+
+Commands run:
+- gh pr list, then gh pr view, gh pr checks and gh pr diff for each PR. Read the release notes for breaking changes, checked the diff was a one-line version change, and checked which checks actually exercised the changed action.
+- setup-terraform v4: the only breaking change is the Node.js 24 runtime, fine on GitHub-hosted runners. terraform-check ran the new version and passed, so merged.
+- actions/cache v6: no breaking change listed for the inputs I use. The only workflow using it (speed-test) is manual, so the green PR checks did not prove it works. Merged, then ran speed-test from the browser and the cached job passed.
+
+What went wrong:
+- I once ran gh pr checks without a PR number while on main and got "no pull requests found"; the number is needed when not on the PR branch.
+
+Robility application:
+- Same review habit for Azure DevOps task versions and shared template changes: read what changed, check the runtime requirement on self-hosted agents, and verify with a real run when no check covers the change.
+
+Honest limits:
+- The v5 release notes were cut off in my output, so I could not read every intermediate release. Checks only prove what they run.
+
+Status: done.
+
+Webex summary: Reviewed and merged Dependabot major version updates after checking release notes, diffs and a manual verification run.
