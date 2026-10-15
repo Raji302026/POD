@@ -328,3 +328,35 @@ Honest limits:
 Status: done.
 
 Webex summary: Learned Azure Monitor and KQL basics and wrote five practice queries for pipeline failures, container restarts and server heartbeats.
+
+## 2026-10-15: Kubernetes deployments, probes and rollbacks
+
+What it does:
+- Deployment keeps the desired number of pods and replaces failed ones; Service gives the pods one stable address and sends traffic only to ready pods.
+- Readiness probe decides whether a pod gets traffic; liveness probe decides whether a container is restarted. Requests are reserved by the scheduler; limits are the maximum a container may use.
+
+Commands run:
+- kubectl apply of a 2-replica nginx Deployment with probes and resource limits plus a Service; checked get pods, get svc and get endpoints.
+- Rolling update with kubectl set env; rollout status and rollout history showed revisions.
+- Bad update (image tag that does not exist): rollout stalled at 1 of 2 new replicas, the old pods kept serving and the endpoints still listed both IPs. kubectl rollout undo restored the working version.
+- Pod with a failing readiness probe stayed Running 0/1 and was kept out of the Service endpoints. Pod with a failing liveness probe was killed and restarted repeatedly and reached CrashLoopBackOff although nginx itself was healthy.
+
+What went wrong:
+- The first paste of the Deployment manifest was cut off and the kubectl apply line ended up inside the file, so I removed the file and pasted it again in two smaller parts.
+- kubectl rollout undo warned that it does not update the last-applied annotation; the manifest file and the cluster no longer matched.
+- The nginx image could not be pulled by the cluster node (DNS timeout), so I loaded it with docker save --platform linux/amd64 and kind load image-archive.
+
+Interview answers:
+- Zero-downtime deployment: a rolling update with readiness probes. Old pods keep serving until new pods are ready, and a failed rollout stalls instead of causing an outage.
+- Rollback: kubectl rollout undo (or revert the Git commit and redeploy, which keeps Git as the source of truth).
+- Readiness vs liveness: readiness controls traffic, liveness controls restarts. A wrong liveness probe can put a healthy app into CrashLoopBackOff, so check describe events as well as logs.
+
+Robility application:
+- Same checks for containerised services: probes and resource limits in manifests, and roll back by reverting the commit and letting the pipeline redeploy.
+
+Honest limits:
+- Local kind cluster only. No AKS, no ingress, no autoscaling, and no real production rollback.
+
+Status: done.
+
+Webex summary: Practiced Kubernetes deployments (Service, probes, resource limits, rolling update and rollback) on a local cluster.
