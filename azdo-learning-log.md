@@ -507,3 +507,32 @@ Webex summary: Practiced Terraform modules for dev and prod, the moved block for
 **Status:** Lab done and cluster deleted, PR pending.
 
 **Webex summary:** Practised the Helm release lifecycle on kind: install, upgrade, failed upgrade, manual rollback and automatic rollback with --atomic.
+
+## Module 17: Pinning tool versions (Oct 15)
+
+**What it does:** An unpinned `latest` tag means a CI check can start failing one day with no change in our code. Pinning makes every run use the same tool version, and upgrades become a reviewed change.
+
+**Commands run:**
+- `grep -rn "latest"` over the workflows found 4 unpinned uses in 3 files: `prom/prometheus:latest` (twice), the Bicep download from `releases/latest`, and `gitleaks:latest`.
+- Read the real versions from the tools instead of guessing: promtool 3.15.0, Bicep 0.48.1, gitleaks v8.30.1.
+- Verified each pinned version exists before editing: `docker pull`, `docker run ... version`, and `curl -I` on the Bicep URL (302 then 200).
+- Changed the files with `sed`, then PR #45 ran `prometheus-check` and `bicep-check` on the pinned versions. All 8 checks passed.
+
+**What went wrong:** I expected about 2 lines from the first `grep` and there were 4 (the Bicep download was a third file). My first Bicep check used `head -n 1`, which showed only the `302` redirect, so I re-ran it with `grep "^HTTP"` to see the final `200`.
+
+**Robility application:** Shared pipeline templates and build agents should pin the versions of scanners and tools they call. Then one template update cannot silently change what ~400 pipelines run, and a scanner upgrade becomes one reviewed PR.
+
+**Interview answers:**
+- Why pin: reproducible builds. A `latest` tag can change under you and break or weaken a check without any change in your repo.
+- Cost of pinning: someone must upgrade on purpose. Dependabot can open PRs for Docker and Actions versions to automate that.
+- Stronger than a tag: pin by digest (`image@sha256:...`), because tags can be moved.
+
+**Honest limits:**
+- The gitleaks pin in `azure-pipelines-practice/` is not run by any GitHub check. I only checked that the tag exists and prints the right version.
+- I pinned by tag, not by digest.
+- Runner labels like `ubuntu-latest` and the `actions/*` versions were not changed here.
+- Open gap: `terraform-check`, `bicep-check`, `prometheus-check` and `helm-check` are still not required checks in the ruleset. Adding them needs the browser (Settings, Rules, protect-main), which I have not done yet.
+
+**Status:** Three files pinned, PR #45.
+
+**Webex summary:** Pinned the Prometheus, Bicep and gitleaks versions used in CI after verifying each version exists, and logged the remaining ruleset gap.
