@@ -726,3 +726,31 @@ Webex summary: Practiced Terraform modules for dev and prod, the moved block for
 **Status:** Postmortem written, PR pending.
 
 **Webex summary:** Wrote a blameless postmortem for the container networking problem found while testing the monitoring stack, separating what is known from what is not and listing concrete action items.
+
+## Module 23: Required status checks (governance)
+
+Date: 2026-10-16
+
+What I did:
+- Edited the protect-main ruleset in the GitHub browser UI to require nine status checks before merging: build-check, secret-scan, terraform-check, bicep-check, prometheus-check, helm-check, dockerfile-check, dora-check, policy-check.
+- Verified the saved rule from the terminal with a read-only call: gh api repos/Raji302026/POD/rulesets/24634824.
+- Proved the rule works with a throwaway PR (#51). I added an invalid line to helm-practice/webapp/values-dev.yaml.
+
+What happened:
+- helm-check failed. The other 11 checks passed.
+- gh pr merge 51 --squash was refused: "the base branch policy prohibits the merge."
+- I did not use --auto (it merges as soon as the check passes) or --admin (it bypasses the rule).
+- I closed PR #51, deleted the branch, and confirmed main has no broken line (grep count 0).
+
+What I learned:
+- A check only protects main once it is marked required in the ruleset. A check that runs but is not required can be ignored.
+- Always test a gate with a deliberately bad change. Seeing green checks proves nothing about blocking.
+- Required checks are matched by job name, so a renamed job can silently stop being required.
+- This is the same idea as Azure DevOps branch policies with build validation, plus the "Extends template required check" for pipeline templates.
+
+Limits (honest):
+- docker-build and CodeQL are not required. docker-build is path-filtered, so it does not run on every PR and would block unrelated PRs.
+- The "require branch to be up to date" setting is off, so a PR can merge without being re-tested against the latest main.
+- The checks only cover what they run. A passing check does not mean the change is safe.
+- This is a one-person repo with an empty bypass list. In a team, I would decide carefully who can bypass.
+- This is a GitHub lab. I could not practice Azure DevOps branch policies directly because Azure DevOps is blocked on the work network.
