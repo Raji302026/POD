@@ -8,3 +8,4 @@ resources:
   limits:
     cpu: 100m
     memory: 64Mi
+broken: [unclosed
