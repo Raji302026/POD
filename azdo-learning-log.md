@@ -696,3 +696,33 @@ Webex summary: Practiced Terraform modules for dev and prod, the moved block for
 **Status:** Policy added, chart fixed and CI check added, PR pending.
 
 **Webex summary:** Wrote policy-as-code rules with Conftest, found and fixed three real issues in my Helm chart (missing resource limits and an untagged image), and added a CI check that blocks them.
+
+## Module 22: Blameless postmortem (Oct 16)
+
+**What it does:** A postmortem records what happened in an incident, why, and what will change, without blaming a person. The aim is to fix the system and the process so the same problem does not repeat.
+
+**Commands run:**
+- Wrote `postmortems/2026-10-16-container-network.md` about a real problem from this morning: Prometheus could not scrape Alertmanager because containers on one Docker network could not reach each other in the Codespace.
+- Sections: summary, impact, timeline with exact times, root cause, what went well, what went poorly, action items.
+- Separated what is known (container to container traffic times out, by name and by IP) from what is not known (why, and whether it is the same cause as the earlier kind DNS problem).
+- Action items are concrete: a 30 second network smoke test before building any multi-container stack, keep the config checks in CI, and finish the end-to-end test on a machine with normal container networking.
+
+**What went wrong:** I pasted the second half of the document twice, so the file had 11 headings instead of 7. I found it with `grep -c`, looked at the line numbers with `grep -n`, and cut the file to the first 54 lines.
+
+**Robility application:** The same format fits a real incident on the Robility platform, such as a failed deployment or a pipeline outage. A shared template makes the write-ups consistent, and the action items become tracked work instead of good intentions.
+
+**Interview answers:**
+- What blameless means: the write-up asks what in the system, the process or the tooling allowed the mistake, instead of who made it. People then report problems early instead of hiding them.
+- A postmortem is useful when the action items are specific, have an owner and are actually done. "Be more careful" is not an action item.
+- Say what you do not know. "Root cause partly known" is more honest and more useful than a confident guess.
+- Typical structure: summary, impact, timeline, root cause, what went well, what went poorly, action items.
+
+**Honest limits:**
+- This was a low severity problem in a personal lab with no users, so there was no on-call response, no customer impact and no incident commander.
+- The root cause is only partly known: the Codespace network may block container traffic, but I did not verify that.
+- The action items have no owner or due date beyond me, and none has been done yet.
+- I have not written a postmortem for a real production incident at work, and none of this has been reviewed by anyone else.
+
+**Status:** Postmortem written, PR pending.
+
+**Webex summary:** Wrote a blameless postmortem for the container networking problem found while testing the monitoring stack, separating what is known from what is not and listing concrete action items.
