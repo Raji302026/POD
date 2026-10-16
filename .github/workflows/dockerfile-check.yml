@@ -1,0 +1,13 @@
+name: dockerfile-check
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  dockerfile-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Scan Dockerfile for misconfigurations
+        run: docker run --rm -v "$PWD/docker-practice":/work aquasec/trivy:0.57.1 config --severity HIGH,CRITICAL --exit-code 1 /work

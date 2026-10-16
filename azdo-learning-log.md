@@ -536,3 +536,57 @@ Webex summary: Practiced Terraform modules for dev and prod, the moved block for
 **Status:** Three files pinned, PR #45.
 
 **Webex summary:** Pinned the Prometheus, Bicep and gitleaks versions used in CI after verifying each version exists, and logged the remaining ruleset gap.
+
+## Module 18: Docker image hardening (Oct 16)
+
+**What it does:** Reduces what an attacker can do if the container is compromised: run as a normal user, add a health check, and drop privileges at run time.
+
+**Commands run:**
+- Built the old image as the baseline: 103 MB, `id` showed `uid=0(root)`.
+- Switched the base to `nginxinc/nginx-unprivileged:1.31-alpine` after checking the tag exists (it runs as `uid=101`, port 8080). Used `USER root` only for `apk upgrade`, then `USER nginx`.
+- Added `COPY --chown`, a `HEALTHCHECK`, and a `.dockerignore`.
+- New image: 91.5 MB, runs as `uid=101(nginx)`, returned HTTP 200 and showed `(healthy)`.
+- Ran it with `--read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges`. It still served HTTP 200.
+- Trivy image scan (0.57.1): both images showed 0 HIGH or CRITICAL findings.
+- Trivy config scan of the Dockerfile: the old one failed 2 checks (HIGH: no non-root USER, LOW: no HEALTHCHECK), the new one passed. Exit codes were 1 for old and 0 for new.
+- Added `dockerfile-check.yml` so a Dockerfile that runs as root fails the PR. PR #46 showed 10 successful checks.
+
+**What went wrong:** I guessed the old image was about 50 MB, and `docker images` showed 103 MB. I pressed Ctrl+C during the first baseline image scan, so I had to run it again. I used `--no-progress` with `trivy config`, which does not accept it, so I switched to `--quiet`.
+
+**Robility application:** Container images for the Robility services should run as a non-root user, and a Dockerfile scan in the PR gate stops a root-running image before it reaches a registry. The runtime flags (read-only filesystem, dropped capabilities) are for the container spec or Helm values.
+
+**Interview answers:**
+- A clean vulnerability scan does not mean a secure image. Both my images had 0 CVEs, but only one ran as non-root. Image scans and Dockerfile or config scans find different problems.
+- Why non-root: if the app is compromised or the container escapes, the attacker does not start as root.
+- Ports below 1024 need root, so an unprivileged image listens on 8080 and the service maps the port.
+- Multi-stage builds only help when there is a build step. A static page has none, so I did not force one.
+
+**Honest limits:**
+- Local Docker only. No registry push, image signing, SBOM or base-image digest pinning.
+- The base image is pinned by tag, not by digest.
+- `dockerfile-check` is not a required check yet (the ruleset still needs the browser change), and I never made it fail in CI. I only showed the old Dockerfile fails with exit code 1 locally.
+- In Kubernetes the same limits would be set with `securityContext` (runAsNonRoot, readOnlyRootFilesystem, drop capabilities). I did not test that here.
+- The lab used a small static nginx page, not a real Robility service.
+
+**Status:** Dockerfile hardened and Dockerfile scan added, PR #46.
+
+**Webex summary:** Hardened the Docker image (non-root, health check, locked-down runtime flags) and added a CI scan that fails a Dockerfile running as root.
+
+**Robility application:** Container images for the Robility services should run as a non-root user, and a Dockerfile scan in the PR gate stops a root-running image before it reaches a registry. The runtime flags (read-only filesystem, dropped capabilities) are for the container spec or Helm values.
+
+**Interview answers:**
+- A clean vulnerability scan does not mean a secure image. Both my images had 0 CVEs, but only one ran as non-root. Image scans and Dockerfile or config scans find different problems.
+- Why non-root: if the app is compromised or the container escapes, the attacker does not start as root.
+- Ports below 1024 need root, so an unprivileged image listens on 8080 and the service maps the port.
+- Multi-stage builds only help when there is a build step. A static page has none, so I did not force one.
+
+**Honest limits:**
+- Local Docker only. No registry push, image signing, SBOM or base-image digest pinning.
+- The base image is pinned by tag, not by digest.
+- `dockerfile-check` is not a required check yet (the ruleset still needs the browser change), and I never made it fail in CI. I only showed the old Dockerfile fails with exit code 1 locally.
+- In Kubernetes the same limits would be set with `securityContext` (runAsNonRoot, readOnlyRootFilesystem, drop capabilities). I did not test that here.
+- The lab used a small static nginx page, not a real Robility service.
+
+**Status:** Dockerfile hardened and Dockerfile scan added, PR #46.
+
+**Webex summary:** Hardened the Docker image (non-root, health check, locked-down runtime flags) and added a CI scan that fails a Dockerfile running as root.
