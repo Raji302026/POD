@@ -662,3 +662,37 @@ Webex summary: Practiced Terraform modules for dev and prod, the moved block for
 **Status:** Script, tests and CI check added, PR pending.
 
 **Webex summary:** Calculated deployment frequency and lead time from my own PR history with a tested Python script, and learned how bots, outliers and small samples distort delivery metrics.
+
+## Module 21: Policy as code with Conftest (Oct 16)
+
+**What it does:** Conftest checks configuration files (Kubernetes manifests, rendered Helm output) against rules written in Rego. A rule that fails turns the PR check red, so unsafe config is blocked before it is deployed.
+
+**Commands run:**
+- Read the real version from the image before pinning: Conftest v0.71.1 (OPA 1.21.1), and checked the pinned tag exists. OPA 1.x needs the newer Rego syntax (`deny contains msg if { ... }`).
+- Wrote `policy/k8s.rego` with three `deny` rules (no resources.limits, image without a tag, image with the latest tag) and one `warn` rule (no runAsNonRoot). A `deny` fails the check, and a `warn` only reports.
+- Ran it on `k8s-deploy/` and `k8s-practice/no-resources-pod.yaml`. The deliberately broken demo pods failed as expected, and `web.yaml` passed with one warning.
+- Rendered my Helm chart with `helm template` and piped it into Conftest. The policy found 3 real failures in my own chart: no limits on the Deployment, no limits on the Helm test pod, and the test pod image `busybox` had no tag.
+- Fixed them: added `resources` to `values-dev.yaml` and `values-prod.yaml`, pinned `busybox:1.37.0` (checked the tag exists and prints BusyBox v1.37.0), and added limits to the test pod. Both environments then passed with exit code 0.
+- Added `policy-check.yml` so every PR renders the chart for dev and prod and runs the policy.
+
+**What went wrong:** My first policy run exited with 1 because the demo manifests are deliberately broken, so I limited CI to files that should be clean. My first attempt to read the busybox version only showed the pull message, so I confirmed it with a second command. The policy file I pasted was not written the first time because only the pull command ran.
+
+**Robility application:** The same rules can be run against the Kubernetes or Helm output for any Robility service before deployment, so a missing resource limit or a latest tag is caught in the PR. The rules live in one folder, so one change updates the standard everywhere.
+
+**Interview answers:**
+- What policy as code is: rules written as code, versioned and reviewed like any other code, and enforced automatically in the pipeline instead of by a person remembering a checklist.
+- `deny` vs `warn`: deny fails the check, warn only reports. Start new rules as warnings so you can improve gradually, then promote them to deny.
+- Why check the rendered output, not just the templates: the templates contain placeholders, and what actually gets deployed is the rendered YAML.
+- Conftest checks files before deployment. Admission controllers such as OPA Gatekeeper or Azure Policy for Kubernetes enforce the same kind of rules inside the cluster at deploy time. A good setup uses both.
+
+**Honest limits:**
+- Only a handful of simple rules for two workload kinds (Pod and Deployment). StatefulSet, DaemonSet, Job and init containers are not covered.
+- The "no tag" rule is naive: an image from a registry with a port (host:5000/image) would count as tagged.
+- `runAsNonRoot` is only a warning, so the chart still runs as root by default.
+- Rules were tested only on my own manifests, with no automated tests for the rules themselves (Conftest has a `verify` command for that).
+- Nothing was deployed. I did not test admission control inside a cluster.
+- `policy-check` is not a required check in the ruleset yet.
+
+**Status:** Policy added, chart fixed and CI check added, PR pending.
+
+**Webex summary:** Wrote policy-as-code rules with Conftest, found and fixed three real issues in my Helm chart (missing resource limits and an untagged image), and added a CI check that blocks them.
