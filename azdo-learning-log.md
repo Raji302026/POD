@@ -754,3 +754,25 @@ Limits (honest):
 - The checks only cover what they run. A passing check does not mean the change is safe.
 - This is a one-person repo with an empty bypass list. In a team, I would decide carefully who can bypass.
 - This is a GitHub lab. I could not practice Azure DevOps branch policies directly because Azure DevOps is blocked on the work network.
+
+## Module 24: SBOM and supply chain scanning
+
+Date: 2026-10-16
+
+What I did:
+- Rebuilt webapp:hardened in a fresh Codespace. The first build failed with "content digest not found" (a half-downloaded base layer). Running docker pull on the base image fixed it.
+- Trivy was not installed, so I ran it as a container pinned to 0.57.1, the same version CI uses.
+- Generated a CycloneDX SBOM: trivy image --format cyclonedx --output sbom.cdx.json webapp:hardened.
+- The SBOM lists 71 packages on Alpine 3.24.2.
+- Scanned the SBOM file itself: trivy sbom --severity HIGH,CRITICAL. Result: 0 HIGH, 0 CRITICAL.
+
+What I learned:
+- An SBOM is an inventory of every package in an image. It can be stored and rescanned later without rebuilding.
+- CycloneDX output has no vulnerability data. The scan is a separate step against the SBOM.
+- Same reason as before for pinning the Trivy version: results should be repeatable.
+
+Limits (honest):
+- A clean result means no known HIGH/CRITICAL issues today. It must be rescanned as new vulnerabilities are published.
+- The SBOM was not signed or attested, so nothing proves it matches the image.
+- It covers OS packages only. No language-specific files were found (num=0).
+- The SBOM file is generated output, so it is not committed.
