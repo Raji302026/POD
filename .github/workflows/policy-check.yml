@@ -1,0 +1,19 @@
+name: policy-check
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  policy-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Policy check on rendered Helm chart
+        run: |
+          for env in dev prod; do
+            echo "Checking $env"
+            helm template demo helm-practice/webapp -f helm-practice/webapp/values-$env.yaml | docker run --rm -i -v "$PWD":/project -w /project openpolicyagent/conftest:v0.71.1 test - -p policy
+          done
+      - name: Policy check on web manifest
+        run: docker run --rm -v "$PWD":/project -w /project openpolicyagent/conftest:v0.71.1 test k8s-deploy/web.yaml -p policy
