@@ -16,3 +16,7 @@ jobs:
         run: docker run --rm --entrypoint promtool -v "$PWD/observability-practice":/cfg prom/prometheus:v3.15.0 check rules /cfg/alerts.yml
       - name: Check config
         run: docker run --rm --entrypoint promtool -v "$PWD/observability-practice":/cfg prom/prometheus:v3.15.0 check config /cfg/prometheus.yml
+      - name: Check Alertmanager config
+        run: docker run --rm --entrypoint amtool -v "$PWD/observability-practice":/cfg prom/alertmanager:v0.34.1 check-config /cfg/alertmanager.yml
+      - name: Validate compose file
+        run: docker compose -f observability-practice/docker-compose.yml config --quiet
