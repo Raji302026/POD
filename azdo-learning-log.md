@@ -628,3 +628,37 @@ Webex summary: Practiced Terraform modules for dev and prod, the moved block for
 **Status:** Alerting config added and checked in CI, PR pending.
 
 **Webex summary:** Set up Alertmanager routing and inhibition, validated the monitoring configs offline and added an Alertmanager check to CI. The full stack could not run end to end because container networking is blocked in the Codespace.
+
+## Module 20: DORA metrics from my own repo (Oct 16)
+
+**What it does:** DORA metrics measure delivery performance: deployment frequency, lead time for changes, change failure rate and time to restore. I calculated the first two from the real PR history of this repo.
+
+**Commands run:**
+- `gh pr list --state merged --json number,createdAt,mergedAt,author` to get the data (45 merged PRs).
+- Wrote `dora-practice/dora.py` (pure Python, reads a JSON file) with unit tests built from sample data with known answers (median 20, max 60, two active days). All 3 tests passed before I used it on real data.
+- Results for all 45 PRs: 9 day span, 5 active days, about 5 merges per day, median lead time 2.1 min, 90th percentile 47.4 min, maximum 320.8 min.
+- Found the slowest PRs were Dependabot bumps (#34 and #35, about 5 hours) that I left open on purpose to review major-version changes.
+- Split the data into human and bot PRs. Human: 41 PRs, p90 16.3 min, max 54.3 min. Bot: 4 PRs, median 162.3 min.
+- Added `dora-check.yml` so the unit tests run on every PR.
+
+**What went wrong:** My first `py_compile` created a `__pycache__` folder in the repo folder, so I added a `.gitignore` before committing. I also nearly quoted a 90th percentile from only 4 bot PRs, which is just the maximum.
+
+**Robility application:** The same approach could report how long Robility pipeline PRs wait for review and how often changes ship, pulled from Azure DevOps instead of GitHub. That turns "we feel slow" into numbers a manager can act on.
+
+**Interview answers:**
+- The four DORA metrics: deployment frequency, lead time for changes, change failure rate, and time to restore service. The first two measure speed, and the last two measure stability.
+- My lead time is understated: I measured from PR opened to merged, but the real metric starts at the first commit.
+- Bots and one-off outliers can distort a metric, so I split Dependabot PRs from human PRs before drawing conclusions.
+- Percentiles need enough data: a 90th percentile from 4 samples is meaningless.
+- Measuring one person's learning repo is not the same as measuring a team. Metrics should guide improvement, not rank people.
+
+**Honest limits:**
+- Merges to `main` stand in for deployments. Nothing here is actually deployed, so deployment frequency is only a proxy.
+- Change failure rate and time to restore were not measured, because there are no production incidents or failed deployments in this repo.
+- Lead time starts when the PR is opened, not at the first commit.
+- One person's learning repo, 9 days of data, 45 PRs. Not a team or a production system.
+- The script was tested on sample data only, not on edge cases like PRs merged on the same second or time zone changes.
+
+**Status:** Script, tests and CI check added, PR pending.
+
+**Webex summary:** Calculated deployment frequency and lead time from my own PR history with a tested Python script, and learned how bots, outliers and small samples distort delivery metrics.
