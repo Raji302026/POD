@@ -820,3 +820,23 @@ Limits (honest):
 - Both versions ran the same image, so the lab shows the mechanism, not a real release.
 - There was no readiness gate or automated check before the switch.
 - Database changes (the hard part of blue/green) were not covered.
+
+## Module 27: Key Vault pipeline pattern and hardcoded-secret rule (offline)
+
+Date: 2026-10-21
+
+What I did:
+- Wrote azure-pipelines-practice/azure-pipelines-keyvault.yml using the AzureKeyVault@2 task to read db-password and api-key, then pass them to a script as environment variables. The service connection and vault names are placeholders.
+- Wrote a Conftest rule (policy/pipeline.rego, package pipeline) that denies variables whose names look like secrets (password, secret, token, api-key) when they have a hardcoded value.
+- Made a fake bad example in policy-testdata/bad-pipeline.yml. The rule failed it with a clear message. The Key Vault pipeline passed.
+
+What I learned:
+- Secrets should live in Key Vault and be fetched at run time, not stored in YAML or variables.
+- A policy rule can catch hardcoded secrets before merge, as a second layer next to secret scanning.
+- Secret-looking values are masked in logs, but passing them through environment variables is safer than command-line arguments.
+
+Limits (honest):
+- Nothing was run against real Azure. Azure DevOps is blocked from my network, so the task inputs are written from knowledge and not validated.
+- The rule only checks variable names against a word list, so a secret with an unusual name would be missed. It does not inspect values.
+- It only looks at the top-level variables block, not variable groups or templates.
+- All values in the test file are fake.
