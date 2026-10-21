@@ -17,3 +17,12 @@ jobs:
           done
       - name: Policy check on web manifest
         run: docker run --rm -v "$PWD":/project -w /project openpolicyagent/conftest:v0.71.1 test k8s-deploy/web.yaml -p policy
+      - name: Pipeline secret rule passes on Key Vault pipeline
+        run: docker run --rm -v "$PWD":/project -w /project openpolicyagent/conftest:v0.71.1 test azure-pipelines-practice/azure-pipelines-keyvault.yml -p policy --namespace pipeline
+      - name: Pipeline secret rule catches the bad example
+        run: |
+          if docker run --rm -v "$PWD":/project -w /project openpolicyagent/conftest:v0.71.1 test policy-testdata/bad-pipeline.yml -p policy --namespace pipeline; then
+            echo "Rule did not catch the hardcoded secret"
+            exit 1
+          fi
+          echo "Rule caught the hardcoded secret as expected"

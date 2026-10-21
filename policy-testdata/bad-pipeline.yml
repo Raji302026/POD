@@ -1,0 +1,5 @@
+trigger: none
+variables:
+  db-password: FAKE-hardcoded-value-123
+steps:
+- script: ./deploy.sh
