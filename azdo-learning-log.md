@@ -776,3 +776,24 @@ Limits (honest):
 - The SBOM was not signed or attested, so nothing proves it matches the image.
 - It covers OS packages only. No language-specific files were found (num=0).
 - The SBOM file is generated output, so it is not committed.
+
+## Module 25: Kubernetes RBAC (Role and RoleBinding)
+
+Date: 2026-10-21
+
+What I did:
+- Created a kind cluster, a namespace (rbac-demo) and a service account (viewer).
+- Checked its permissions before any Role: kubectl auth can-i list pods returned no. A new service account has no permissions.
+- Created a Role (pod-reader: get, list, watch on pods) and a RoleBinding (viewer-binding) in rbac-demo.
+- Tested with kubectl auth can-i --as=system:serviceaccount:rbac-demo:viewer. List pods in rbac-demo: yes. Delete pods in rbac-demo: no. List pods in default: no.
+
+What I learned:
+- RBAC is deny by default. A Role lists allowed verbs on resources, and a RoleBinding gives it to a subject.
+- A Role only works inside its own namespace. A ClusterRole is needed for cluster-wide access.
+- kubectl auth can-i --as=... tests permissions without logging in as that account.
+- Least privilege: grant only the verbs needed (read, not delete).
+
+Problem hit and limits (honest):
+- The kind cluster from 4 days earlier did not survive the Codespace restart. Docker reported the container storage layer as missing, so the container could not start. I deleted and recreated the cluster. Labs should be scripted so they can be rebuilt quickly.
+- I tested permissions with can-i only. I did not run a real pod using the service account token.
+- ClusterRole and group bindings were not practiced.
