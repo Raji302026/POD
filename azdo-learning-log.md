@@ -797,3 +797,26 @@ Problem hit and limits (honest):
 - The kind cluster from 4 days earlier did not survive the Codespace restart. Docker reported the container storage layer as missing, so the container could not start. I deleted and recreated the cluster. Labs should be scripted so they can be rebuilt quickly.
 - I tested permissions with can-i only. I did not run a real pod using the service account token.
 - ClusterRole and group bindings were not practiced.
+
+## Module 26: Blue/green release with a Service selector
+
+Date: 2026-10-21
+
+What I did:
+- Built plain Kubernetes files in bluegreen-practice/: two Deployments (web-blue, web-green) and one Service (web). Pods carry a slot label (blue or green).
+- The Helm chart selects pods only by name and instance, so it cannot switch between two versions. I left the chart unchanged.
+- Loaded the nginx image into kind with docker save --platform linux/amd64 and kind load image-archive, because kind load docker-image failed with "content digest not found" again.
+- Service pointed at blue: endpoint 10.244.0.5. Patched the selector to green: endpoint 10.244.0.6. No pods restarted.
+- Switched back to blue to roll back (endpoint back to 10.244.0.5).
+- Ran the files through my Conftest policies: 4 tests passed.
+
+What I learned:
+- Blue/green runs two full versions at once and switches traffic by changing the Service selector. Rollback is one command and takes about a second.
+- Cost: you pay for double the pods while both run. Canary sends only part of the traffic to the new version.
+- The nginx tag 1.31-alpine now has a different digest than on Oct 16 (b5047b9b vs 378d0c32), so a tag can move. Pinning by digest would make builds repeatable.
+
+Limits (honest):
+- I switched the Service but did not send real requests to compare the two versions.
+- Both versions ran the same image, so the lab shows the mechanism, not a real release.
+- There was no readiness gate or automated check before the switch.
+- Database changes (the hard part of blue/green) were not covered.
