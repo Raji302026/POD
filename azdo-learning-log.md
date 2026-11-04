@@ -840,3 +840,24 @@ Limits (honest):
 - The rule only checks variable names against a word list, so a secret with an unusual name would be missed. It does not inspect values.
 - It only looks at the top-level variables block, not variable groups or templates.
 - All values in the test file are fake.
+
+## Module 28: Pinning container images by digest
+
+Date: 2026-11-04
+
+What I did:
+- Searched the repo for image references (34 found) and split them into three groups: intentional practice files (k8s-practice nginx:latest, k8s-debug bad tag and crash demos), real images worth pinning, and the Helm chart (needs a template change).
+- Pinned seven references with @sha256 digests: the Dockerfile base image, blue.yaml and green.yaml, the Prometheus, Alertmanager and Grafana images in docker-compose.yml, and the busybox test pod in the Helm chart.
+- Looked up each digest with docker pull and docker inspect (RepoDigests).
+- Checked: docker compose config passed, helm lint passed (0 failed), and the pinned Dockerfile built successfully.
+
+What I learned:
+- A tag is a label that can be moved. A digest identifies one exact image build. The nginx 1.31-alpine tag pointed to a different digest on Oct 21 than on Oct 16, and busybox 1.37.0 changed between Oct 21 and Nov 4.
+- Pinning makes builds repeatable, but it also stops automatic security patches. A routine is needed to update digests, for example Dependabot or Renovate.
+- I kept the tag next to the digest (image:tag@sha256:...) so people can still read the version.
+
+Problems and limits (honest):
+- My first set of edits on Oct 21 was never committed. The Codespace was rebuilt and they were lost, so I redid them. Commit early.
+- The compose file was checked with config only. I did not start the stack with the pinned images.
+- The Helm chart main image (1.27-alpine), k8s-deploy files and the practice files are not pinned.
+- I did not add a policy rule requiring digests, because it would fail CI on the unpinned files above.
