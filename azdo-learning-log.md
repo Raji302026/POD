@@ -861,3 +861,27 @@ Problems and limits (honest):
 - The compose file was checked with config only. I did not start the stack with the pinned images.
 - The Helm chart main image (1.27-alpine), k8s-deploy files and the practice files are not pinned.
 - I did not add a policy rule requiring digests, because it would fail CI on the unpinned files above.
+
+## Module 29: Kubernetes fundamentals with kubectl (guided lab)
+
+Date: 2026-10-29
+
+What I did:
+- Worked in a hosted Kubernetes lab (one master and two worker nodes), connected to the master over SSH with MobaXterm. This was not my own cluster or repo.
+- Pods: created pods with kubectl run (nginx, and httpd with a label), and generated a pod YAML with --dry-run=client -o yaml before creating it from the file.
+- Deployments: created and scaled Deployments by command and from YAML files.
+- Services: looked at the default kubernetes ClusterIP Service and its endpoints, created a ClusterIP Service with kubectl expose, and created a NodePort Service on port 30001 from a YAML file.
+- ReplicaSets: created one from a YAML file, deleted a pod, and saw the ReplicaSet create a replacement.
+- Rolling update: changed a Deployment image from nginx to httpd with kubectl set image, watched the rollout, saw the old ReplicaSet kept at zero pods, and rolled back with kubectl rollout undo.
+
+What I learned:
+- A Deployment manages ReplicaSets, and a ReplicaSet keeps the wanted number of pods running.
+- A Service finds pods by labels (the selector), not by fixed IPs, so endpoints update as pods are replaced or scaled.
+- ClusterIP is internal only. NodePort opens one port on every node.
+- A rolling update replaces pods gradually. The old ReplicaSet stays with zero pods so rollback is fast.
+- This is the same idea as my blue/green lab (Module 26), except Kubernetes manages the switch.
+
+Limits (honest):
+- The steps were guided by the lab instructions, so this shows I can run the commands, not that I designed the setup.
+- It ran in a hosted lab, so I did not use my own repo, CI or policy checks here.
+- I did not cover probes, resource limits or autoscaling in this lab.
