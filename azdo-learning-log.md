@@ -885,3 +885,30 @@ Limits (honest):
 - The steps were guided by the lab instructions, so this shows I can run the commands, not that I designed the setup.
 - It ran in a hosted lab, so I did not use my own repo, CI or policy checks here.
 - I did not cover probes, resource limits or autoscaling in this lab.
+
+## Module 30: Kubernetes NetworkPolicy (deny-all and allow by label)
+
+Date: 2026-11-11
+
+What I did:
+- Reinstalled kind v0.33.0 (pinned) after the Codespace was rebuilt, and created a kind cluster named netpol.
+- Loaded the nginx-unprivileged and busybox images into the cluster with docker save and kind load image-archive.
+- Created a web pod (label app=web) and a ClusterIP Service on port 80 (targetPort 8080).
+- Baseline: a client pod (label role=client) reached web and got the nginx page.
+- Applied a deny-all ingress policy (podSelector empty, policyTypes Ingress). The client then got "wget: download timed out".
+- Applied a second policy that allows ingress to app=web only from pods labeled role=client on TCP 8080. The client worked again. A pod labeled role=intruder still timed out.
+- Saved both policies in netpol-practice/ in the repo.
+
+What I learned:
+- Pods accept traffic from any pod by default. A NetworkPolicy that selects a pod makes it deny everything not explicitly allowed.
+- Policies are additive. A deny-all policy plus a small allow policy gives least privilege.
+- Policies match the pod port (8080), not the Service port (80).
+- A timeout (not "bad address") showed that DNS still worked and only the connection to the pod was dropped.
+- This is network-level least privilege, the same idea as RBAC (Module 25) but for pod traffic.
+
+Problems and limits (honest):
+- After the Codespace paused, kubectl was refused because the API server port changed. kind export kubeconfig --name netpol fixed it.
+- DNS lookups failed (bad address) for a short time after the restart. They worked after CoreDNS settled, so I retried before drawing conclusions.
+- I only tested ingress rules. Egress policies, namespace selectors and policies across namespaces were not practiced.
+- This is a single-node kind cluster. I did not test it on a production-style cluster or with a policy engine like Calico or Cilium.
+- The lab pods were created with kubectl run, not from files, so only the policy files are in the repo.
