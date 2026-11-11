@@ -912,3 +912,25 @@ Problems and limits (honest):
 - I only tested ingress rules. Egress policies, namespace selectors and policies across namespaces were not practiced.
 - This is a single-node kind cluster. I did not test it on a production-style cluster or with a policy engine like Calico or Cilium.
 - The lab pods were created with kubectl run, not from files, so only the policy files are in the repo.
+
+## Module 31: Repeatable lab setup script (pinned tools and checksums)
+
+Date: 2026-11-11
+
+What I did:
+- Wrote scripts/install-lab-tools.sh to install kind v0.33.0, kubectl v1.37.2 and helm v4.3.1 at pinned versions.
+- Each download is verified with the checksum file the project publishes. The script stops if a check fails.
+- It is safe to re-run: a tool that already has the pinned version is skipped.
+- BIN_DIR can be overridden, so I could test the install path in a throwaway folder (/tmp/labbin-test) without touching my installed tools.
+- Tested: bash -n (syntax ok), a run with all tools already installed (three "already installed" lines), and a real install into the throwaway folder (three checksum OK lines and the pinned versions).
+
+What I learned:
+- Pinning versions and verifying checksums makes a rebuilt environment repeatable and safer than downloading "latest".
+- A script that can be re-run safely (idempotent) and tested in a throwaway folder is easier to trust.
+- My first attempt to write the script through the terminal was scrambled by a long paste. Writing it in three short parts and checking the line count after each part worked.
+
+Limits (honest):
+- I did not test a failing checksum, so I have not seen the script stop on a bad file.
+- It only supports Linux amd64 and installs three tools. Docker is not installed by it, because Codespaces provides it.
+- The checksum files come from the same sites as the binaries, so this protects against corruption and wrong files but not against a compromised release.
+- The versions will go out of date and need a regular review.
