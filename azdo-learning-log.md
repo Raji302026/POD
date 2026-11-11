@@ -934,3 +934,25 @@ Limits (honest):
 - It only supports Linux amd64 and installs three tools. Docker is not installed by it, because Codespaces provides it.
 - The checksum files come from the same sites as the binaries, so this protects against corruption and wrong files but not against a compromised release.
 - The versions will go out of date and need a regular review.
+
+## Module 32: Kubernetes persistent storage (PVC)
+
+Date: 2026-11-11
+
+What I did:
+- Created a kind cluster named storage and loaded the busybox image into it with docker save and kind load image-archive.
+- Created a PersistentVolumeClaim (data-pvc, 100Mi, ReadWriteOnce) from storage-practice/pvc.yaml. It stayed Pending until a pod used it, because kind's default class (standard) waits for a pod before creating the volume.
+- Created a pod (writer) that mounts the claim at /data and writes a note file at startup. The claim changed to Bound and a volume was created automatically.
+- Wrote a second file (proof.txt) that the pod never creates itself, deleted the pod, and recreated it. The claim stayed Bound, and proof.txt was still in /data in the new pod.
+
+What I learned:
+- A pod's own filesystem is lost when the pod is deleted. A volume from a PVC outlives the pod.
+- A StorageClass creates the volume automatically when a claim is made (dynamic provisioning).
+- With waiting-for-consumer binding, a claim stays Pending until a pod uses it. That is normal and not an error.
+- To prove persistence, test with a file the pod does not create itself. My first test file was rewritten by the pod at startup, so it proved nothing.
+
+Problems and limits (honest):
+- An early Forbidden error from the API server went away by itself. I recreated the cluster anyway, which was more than needed.
+- The image archive in /tmp and my first claim file were missing after a Codespace rebuild, so I recreated them.
+- I did not practice StatefulSets, access modes beyond ReadWriteOnce, or what happens to the data when the claim itself is deleted (reclaim policy).
+- The volume is local to one kind node. This does not show how storage behaves on a real multi-node cluster or in AKS.
