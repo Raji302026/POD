@@ -981,3 +981,26 @@ Problems and limits (honest):
 - I tried to create a branch that already existed and got an error. It was harmless.
 - This was a local practice repo. I did not practice conflicts in a pull request, interactive rebase, git bisect or force-push rules.
 - The lab files are not saved in the repo, because they were throwaway.
+
+## Module 34: ConfigMaps and Secrets in Kubernetes
+
+Date: 2026-11-18
+
+What I did:
+- Used my kind cluster with a new namespace, cfg-lab, and made a ConfigMap (LOG_LEVEL, APP_MODE) and a Secret (DB_PASSWORD). All values were fake.
+- Viewed both as YAML. The ConfigMap showed plain text. The Secret showed a base64 string, which I decoded with base64 -d back to the original value.
+- Wrote configmap-practice/pod.yaml, a pod that reads LOG_LEVEL and DB_PASSWORD as environment variables and mounts the ConfigMap as files in /etc/app-config.
+- Changed LOG_LEVEL from debug to info in the ConfigMap. The environment variable stayed debug and the mounted file changed to info after a short delay. After I recreated the pod, the environment variable also showed info.
+- Deleted the Secret and recreated the pod. It failed with CreateContainerConfigError and the event said secret "app-secret" not found. I recreated the Secret and the pod recovered to Running by itself.
+
+What I learned:
+- A ConfigMap holds normal settings and a Secret holds sensitive ones, but a Secret is only base64-encoded, not encrypted. Anyone who can read the Secret can decode it, so I limit access with RBAC and keep the real secrets in Key Vault, not in Git.
+- Environment variables are fixed when the pod starts, so they need a pod restart to change. Mounted files update by themselves after a delay, but the app must re-read them.
+- A missing Secret does not stop the pod from being scheduled, but the container cannot start. The fix is to read the events with kubectl describe, then create the missing object. Kubernetes retries by itself.
+- Interview answer: I pass config to pods as environment variables or mounted files, I treat Secrets as access-controlled and not encrypted, and I use mounted files when values must change without a restart.
+
+Problems and limits (honest):
+- The Codespace slept and the kind cluster stopped (Exited 128), so the first command gave connection refused. I restarted the container and ran kind export kubeconfig. The cluster and namespace had survived.
+- I ran the first apply while the old pod was still terminating and got a warning. I also skipped the Secret delete once, so the pod stayed Running until I redid it in the right order.
+- I did not measure exactly how long the mounted file took to update. It had changed within about a minute.
+- I did not practice envFrom, subPath mounts, immutable ConfigMaps, encryption at rest for Secrets, or external secret tools. The Secret was created from the command line, so no Secret YAML is stored in the repo.
