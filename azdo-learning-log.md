@@ -956,3 +956,28 @@ Problems and limits (honest):
 - The image archive in /tmp and my first claim file were missing after a Codespace rebuild, so I recreated them.
 - I did not practice StatefulSets, access modes beyond ReadWriteOnce, or what happens to the data when the claim itself is deleted (reclaim policy).
 - The volume is local to one kind node. This does not show how storage behaves on a real multi-node cluster or in AKS.
+
+## Module 33: Advanced Git (branches, rebase, cherry-pick, reflog, conflicts)
+
+Date: 2026-11-18
+
+What I did:
+- Worked in a throwaway repo (~/git-lab), outside my real repo, so nothing could be damaged.
+- Made three commits and confirmed a branch is only a label: a new branch pointed at the same commit and copied nothing.
+- Made main and a feature branch diverge, then ran git rebase main. The feature commit got a new ID and the history became one straight line.
+- Used git cherry-pick to copy only the newest commit from another branch. It got a new ID, and the earlier commit on that branch was not copied.
+- Did a git reset --hard HEAD~1 on purpose, found the "lost" commit with git reflog, and restored it with git reset --hard HEAD@{1}.
+- Made a merge conflict (two branches changed line 1 differently), read the conflict markers, resolved the file by hand, ran git add and git commit, and got a merge commit with two parents.
+
+What I learned:
+- Merge keeps both histories and adds a merge commit. Rebase rewrites my commits onto a new base, so its commits get new IDs. Do not rebase commits that others already pulled.
+- Cherry-pick copies one commit, and the copy has a new ID.
+- Reflog is a private diary of where HEAD has been, so a committed change is rarely truly lost. It does not rescue uncommitted changes thrown away by reset --hard, and it is local to my machine.
+- A conflict only happens when both sides change the same lines. Git merges the rest cleanly. git merge --abort goes back to before the merge.
+- Interview answer: if I committed to the wrong branch, I can cherry-pick the commit to the right branch and then remove it from the wrong one, or use reflog if I reset too far.
+
+Problems and limits (honest):
+- I ran git merge a second time while the first conflict was still open, and Git refused. I had to finish the first merge first.
+- I tried to create a branch that already existed and got an error. It was harmless.
+- This was a local practice repo. I did not practice conflicts in a pull request, interactive rebase, git bisect or force-push rules.
+- The lab files are not saved in the repo, because they were throwaway.
