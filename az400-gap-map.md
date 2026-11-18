@@ -1,6 +1,6 @@
 # AZ-400 gap map
 
-Date: 2026-10-16
+Date: 2026-10-16 (updated 2026-11-18)
 
 Marks are based on files in this repo. "Practiced" means a lab or workflow exists. Azure DevOps itself is blocked at work, so most labs use GitHub equivalents.
 
@@ -12,25 +12,27 @@ Marks are based on files in this repo. "Practiced" means a lab or workflow exist
 - Identity (OIDC claims workflow)
 - Variables and secrets (vars-and-secrets workflow)
 - Infrastructure as code (Terraform modules, state, import; Bicep checks)
-- Containers and Kubernetes (Helm, probes, affinity, PDB, quotas, network policy, PV/PVC, StatefulSet, debugging)
+- Containers and Kubernetes (Helm, probes, affinity, PDB, quotas, network policy, PV/PVC, debugging)
 - Observability (Prometheus, Alertmanager, Grafana, KQL queries)
 - Metrics and incident process (DORA script, blameless postmortem)
 - Policy as code (Conftest/OPA)
 - Image hardening and scanning (Trivy)
+- SBOM generation and scanning (CycloneDX via Trivy, trivy sbom)
+- Kubernetes RBAC (Role, RoleBinding, kubectl auth can-i --as)
+- Blue/green releases (Service selector switching between slot-labelled Deployments in kind, not Helm)
 
 ## Partly practiced
 - Azure Artifacts (cheatsheet notes only, no hands-on)
 - Azure Pipelines YAML (files exist, but never run in Azure DevOps)
+- Azure Key Vault with pipelines (pipeline YAML and a CI rule blocking hardcoded secrets, never run against a real Key Vault)
 
 ## Not practiced yet
-- SBOM and dependency/supply chain scanning
-- Kubernetes RBAC (roles and bindings)
-- Azure Key Vault integration with pipelines
-- Blue/green releases (canary exists)
 - Pipeline performance and cost tuning at scale
 - GitOps (blocked by Codespace networking)
+- StatefulSets, DaemonSets and Jobs
 
 ## Next labs, in order
-1. SBOM with Trivy
-2. Kubernetes RBAC in kind
-3. Blue/green with Helm
+1. ConfigMaps and Secrets in kind
+2. Linux troubleshooting (disk, memory, services, logs)
+3. Kustomize
+4. Pipeline performance and cost tuning (reading and notes)
