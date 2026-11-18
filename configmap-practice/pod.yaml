@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cfg-pod
+  namespace: cfg-lab
+spec:
+  containers:
+  - name: app
+    image: busybox:1.37.0
+    command: ["sleep", "3600"]
+    env:
+    - name: LOG_LEVEL
+      valueFrom:
+        configMapKeyRef:
+          name: app-config
+          key: LOG_LEVEL
+    - name: DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: app-secret
+          key: DB_PASSWORD
+    volumeMounts:
+    - name: config-vol
+      mountPath: /etc/app-config
+  volumes:
+  - name: config-vol
+    configMap:
+      name: app-config
