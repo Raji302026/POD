@@ -1053,3 +1053,28 @@ Problems and limits (honest):
 - I once pasted old output by mistake and had to run the command again.
 - The prod overlay was never applied, because the busybox 1.36.0 image is not loaded in my cluster.
 - I did not practice configMapGenerator, secretGenerator, components, remote bases, or using Kustomize with Helm or a GitOps tool.
+
+## Module 37: StatefulSets, DaemonSets and Jobs
+
+Date: 2026-11-19
+
+What I did:
+- Made a workloads-practice folder and a namespace wl-lab in my kind cluster.
+- StatefulSet: created db with 3 replicas and a volumeClaimTemplate. The pods came up in order as db-0, db-1 and db-2, each with its own volume (data-db-0, data-db-1, data-db-2).
+- Wrote a file into db-1, then deleted that pod. The replacement came back with the same name, db-1, and the file was still there.
+- Job: job-ok ran once and completed, and its log printed the message. job-fail exits with an error and has backoffLimit 2. It created three pods, with a 10 second then a 20 second delay between them, and stopped with BackoffLimitExceeded.
+- DaemonSet: created one agent pod on my single node.
+- Deleted the StatefulSet. The pods went away but the three volumes stayed Bound. Then I deleted the whole namespace.
+
+What I learned:
+- A StatefulSet gives each pod a stable name and its own volume, and starts pods in order. That is why a database needs one and not a Deployment.
+- Deleting a StatefulSet does not delete its volumes. That protects the data, but the leftover volumes keep costing storage until someone removes them.
+- A Job runs to completion and retries failures up to backoffLimit, with a delay that doubles each time. After that it is marked Failed.
+- A DaemonSet runs one pod per node and has no replica count. My cluster has one node, so it could not show the multi-node behaviour.
+- Interview answer: Deployment for interchangeable pods, StatefulSet for stable identity and storage, DaemonSet for one pod per node, Job for run-once work, CronJob for scheduled work.
+
+Problems and limits (honest):
+- I made counting mistakes in the expected line counts for two files and had to correct them. The files themselves were fine.
+- I mistyped a command once (command not found). It was harmless.
+- I did not create the headless Service that a real StatefulSet database needs, so I did not test per-pod DNS names.
+- I did not practice CronJob, StatefulSet updates or scale-down order, or the setting that controls whether volumes are kept when a StatefulSet is deleted. CronJob was only a lesson.
