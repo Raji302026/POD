@@ -1004,3 +1004,28 @@ Problems and limits (honest):
 - I ran the first apply while the old pod was still terminating and got a warning. I also skipped the Secret delete once, so the pod stayed Running until I redid it in the right order.
 - I did not measure exactly how long the mounted file took to update. It had changed within about a minute.
 - I did not practice envFrom, subPath mounts, immutable ConfigMaps, encryption at rest for Secrets, or external secret tools. The Secret was created from the command line, so no Secret YAML is stored in the repo.
+
+## Module 35: Linux troubleshooting (disk, deleted files, processes)
+
+Date: 2026-11-19
+
+What I did:
+- Worked in a throwaway folder (~/linux-lab) in my Codespace, not on a real server.
+- Disk: made a fake 100 MB log and a fake 5 MB backup, then found the big one with du -sh and checked the disk with df -h. I also checked my real Codespace: 57% used, and docker system df showed 3.9 GB of images with 2.4 GB reclaimable.
+- Deleted but still open: a background tail -f held the log file open. After rm, ls -l /proc/PID/fd showed the file marked (deleted), and stopping the process released it.
+- Runaway process: started yes > /dev/null, found it with ps aux --sort=-%cpu and top, checked it with ps -p, and stopped it with kill.
+- Process that ignores kill: started a bash loop with trap "" TERM. A plain kill did nothing and the process stayed in state R. Then kill -9 stopped it.
+
+What I learned:
+- Method: look first, change later. Symptom, then logs or status, then what changed, then fix, then confirm.
+- df shows how full the disk is and du finds what is using it. A deleted file that a process still holds open keeps its space until that process stops. On a real server I would find it with lsof and restart that service.
+- ps is a snapshot and top is live. I check what a process is and who owns it before I kill it, and I never kill the editor server processes.
+- kill sends SIGTERM, a polite stop that lets a process clean up but can be ignored. kill -9 cannot be ignored by the process, but it gives no chance to clean up, so it is the last resort.
+- Interview answer: for "No space left on device" I run df -h, then du -sh down the biggest folders, and I check for deleted files still held open by a process.
+
+Problems and limits (honest):
+- I typed kil once and got command not found. It was harmless.
+- I skipped the baseline df, so I have no before and after numbers. On a disk this large the change would not have shown anyway.
+- A copy of the ignore-kill process from the evening before was still running when I started, so I used that one for the experiment.
+- I did not try systemctl, journalctl, lsof, ss or the OOM killer. Those parts I only read about and did not practice.
+- du sizes were slightly bigger than the file sizes I made because it counts whole disk blocks.
