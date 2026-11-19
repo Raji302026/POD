@@ -1,0 +1,13 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: job-ok
+  namespace: wl-lab
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: app
+        image: busybox:1.37.0
+        command: ["sh", "-c", "echo job finished"]

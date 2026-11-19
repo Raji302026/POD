@@ -1,0 +1,14 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: job-fail
+  namespace: wl-lab
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: app
+        image: busybox:1.37.0
+        command: ["sh", "-c", "echo trying; exit 1"]
