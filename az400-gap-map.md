@@ -33,10 +33,9 @@ Marks are based on files in this repo. "Practiced" means a lab or workflow exist
 ## Not practiced yet
 - Pipeline performance and cost tuning at scale
 - GitOps (blocked by Codespace networking)
-- StatefulSets, DaemonSets and Jobs
 
 ## Next labs, in order
-1. Pipeline performance and cost tuning (reading and notes)
-2. StatefulSets, DaemonSets and Jobs (lesson, then a lab in kind)
-3. Azure basics: identity, networking, Key Vault (needs a subscription or a Learn sandbox)
-4. Networking basics: DNS, TLS, load balancers (reading)
+1. Pipeline caching lab in GitHub Actions (then notes on cost tuning)
+2. Azure basics: identity, networking, Key Vault (needs a subscription or a Learn sandbox)
+3. Docker multi-stage builds
+4. Ingress in kind
