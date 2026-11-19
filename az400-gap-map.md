@@ -24,6 +24,8 @@ Marks are based on files in this repo. "Practiced" means a lab or workflow exist
 - ConfigMaps and Secrets (env vars vs mounted files, a Secret is only base64, missing-Secret failure)
 - Linux troubleshooting (disk usage, deleted files held open, runaway processes, kill vs kill -9; no systemd or journalctl practice)
 - Kustomize (base, overlays, patches; dev applied in kind, prod only printed)
+- StatefulSets, DaemonSets and Jobs (stable pod names and volumes, Job retries, one DaemonSet pod on a single node; no CronJob practice)
+- Networking basics (DNS, TCP refused vs timeout, TLS certificates; load balancers and 502/504 only read)
 
 ## Partly practiced
 - Azure Artifacts (cheatsheet notes only, no hands-on)
@@ -33,10 +35,9 @@ Marks are based on files in this repo. "Practiced" means a lab or workflow exist
 ## Not practiced yet
 - Pipeline performance and cost tuning at scale
 - GitOps (blocked by Codespace networking)
-- StatefulSets, DaemonSets and Jobs
 
 ## Next labs, in order
-1. Pipeline performance and cost tuning (reading and notes)
-2. StatefulSets, DaemonSets and Jobs (lesson, then a lab in kind)
-3. Azure basics: identity, networking, Key Vault (needs a subscription or a Learn sandbox)
-4. Networking basics: DNS, TLS, load balancers (reading)
+1. Pipeline caching lab in GitHub Actions (then notes on cost tuning)
+2. Azure basics: identity, networking, Key Vault (needs a subscription or a Learn sandbox)
+3. Docker multi-stage builds
+4. Ingress in kind
