@@ -34,3 +34,4 @@ jobs:
           start=$(date +%s)
           pip install -r caching-practice/requirements.txt
           echo "with-cache install seconds: $(( $(date +%s) - start ))"
+# second run to test the cache
