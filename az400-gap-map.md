@@ -1,6 +1,6 @@
 # AZ-400 gap map
 
-Date: 2026-10-16 (updated 2026-11-18)
+Date: 2026-10-16 (updated 2026-11-19)
 
 Marks are based on files in this repo. "Practiced" means a lab or workflow exists. Azure DevOps itself is blocked at work, so most labs use GitHub equivalents.
 
@@ -20,6 +20,10 @@ Marks are based on files in this repo. "Practiced" means a lab or workflow exist
 - SBOM generation and scanning (CycloneDX via Trivy, trivy sbom)
 - Kubernetes RBAC (Role, RoleBinding, kubectl auth can-i --as)
 - Blue/green releases (Service selector switching between slot-labelled Deployments in kind, not Helm)
+- Advanced Git (rebase, cherry-pick, reflog recovery, conflict resolution, in a practice repo)
+- ConfigMaps and Secrets (env vars vs mounted files, a Secret is only base64, missing-Secret failure)
+- Linux troubleshooting (disk usage, deleted files held open, runaway processes, kill vs kill -9; no systemd or journalctl practice)
+- Kustomize (base, overlays, patches; dev applied in kind, prod only printed)
 
 ## Partly practiced
 - Azure Artifacts (cheatsheet notes only, no hands-on)
@@ -32,7 +36,7 @@ Marks are based on files in this repo. "Practiced" means a lab or workflow exist
 - StatefulSets, DaemonSets and Jobs
 
 ## Next labs, in order
-1. ConfigMaps and Secrets in kind
-2. Linux troubleshooting (disk, memory, services, logs)
-3. Kustomize
-4. Pipeline performance and cost tuning (reading and notes)
+1. Pipeline performance and cost tuning (reading and notes)
+2. StatefulSets, DaemonSets and Jobs (lesson, then a lab in kind)
+3. Azure basics: identity, networking, Key Vault (needs a subscription or a Learn sandbox)
+4. Networking basics: DNS, TLS, load balancers (reading)
