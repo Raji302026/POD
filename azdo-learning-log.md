@@ -1029,3 +1029,27 @@ Problems and limits (honest):
 - A copy of the ignore-kill process from the evening before was still running when I started, so I used that one for the experiment.
 - I did not try systemctl, journalctl, lsof, ss or the OOM killer. Those parts I only read about and did not practice.
 - du sizes were slightly bigger than the file sizes I made because it counts whole disk blocks.
+
+## Module 36: Kustomize (base, overlays, patches)
+
+Date: 2026-11-19
+
+What I did:
+- Made kustomize-practice with a base (a Deployment named web, 1 replica, busybox:1.37.0) and two overlays, dev and prod.
+- Printed each with kubectl kustomize. The base came out with the same content and reordered fields. The dev overlay added the namespace kz-dev and the prefix dev-. The prod overlay added the namespace kz-prod, the prefix prod-, 3 replicas and the image tag 1.36.0. A diff of the two outputs showed exactly four differences.
+- Applied the dev overlay with kubectl apply -k. The first try failed because the namespace kz-dev did not exist. I created it and applied again.
+- Added a patch file to the dev overlay to set 2 replicas. My first patch used the name dev-web and failed with no matches for Id Deployment.v1.apps/dev-web. After I changed it to web, it worked and I saw two pods running.
+- Deleted the kz-dev namespace afterwards. I only printed the prod overlay and never applied it.
+
+What I learned:
+- A base holds the common YAML once, and each overlay holds only the differences. The base files are never edited.
+- kubectl kustomize only prints the result. kubectl apply -k builds it and applies it to the cluster.
+- The namespace field sets the namespace on objects but does not create it, so the namespace must exist first.
+- Patches are matched against the original name from the base, before the prefix is added, so the patch uses web and not dev-web.
+- Kustomize vs Helm: Helm uses templates and values and also gives packaging and release history. Kustomize layers changes over plain YAML and has no templates. Interview answer: Helm for packaging and sharing apps, Kustomize for per-environment tweaks.
+
+Problems and limits (honest):
+- The Codespace slept and the kind cluster stopped. The first apply gave connection refused, then kubectl showed a temporary Forbidden error for a few minutes. It cleared by itself and I did not need to recreate the cluster.
+- I once pasted old output by mistake and had to run the command again.
+- The prod overlay was never applied, because the busybox 1.36.0 image is not loaded in my cluster.
+- I did not practice configMapGenerator, secretGenerator, components, remote bases, or using Kustomize with Helm or a GitOps tool.
