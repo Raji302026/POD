@@ -1078,3 +1078,27 @@ Problems and limits (honest):
 - I mistyped a command once (command not found). It was harmless.
 - I did not create the headless Service that a real StatefulSet database needs, so I did not test per-pod DNS names.
 - I did not practice CronJob, StatefulSet updates or scale-down order, or the setting that controls whether volumes are kept when a StatefulSet is deleted. CronJob was only a lesson.
+
+## Module 38: Networking basics (DNS, TCP, TLS)
+
+Date: 2026-11-19
+
+What I did:
+- Worked in my Codespace. dig, nslookup and nc were not installed, so I used getent, curl, openssl and ss.
+- DNS: looked up github.com with getent and got an IPv4 address. A name that cannot exist (.invalid) returned nothing with exit code 2, and curl reported error 6, could not resolve host.
+- TCP: connecting to my own machine on port 9, where nothing listens, failed at once with error 7 after 0 ms. Connecting to 10.255.255.1 with a 5 second limit failed with error 28, a timeout, after 5002 ms.
+- Started a small web server on port 8000 and then stopped it. After it stopped, the same request on port 8000 failed instantly with error 7, so the open door had become a closed one.
+- TLS: read the github.com certificate with openssl and curl. The subject was github.com, the issuer was Sectigo, and it was valid for about 90 days. A deliberately expired test site failed with error 60, certificate has expired.
+
+What I learned:
+- A request passes four layers in order: DNS, the TCP connection, TLS, and then HTTP. Each layer fails with its own message, so the message tells me where to look.
+- Refused fails instantly and a timeout waits for the full limit. Refused means the machine answered and nothing listens on that port. A timeout means packets are being dropped, usually by a firewall or a network rule.
+- curl error 6 is DNS, 7 is refused, 28 is a timeout and 60 is a certificate problem.
+- Certificates are short-lived on purpose, so renewal has to be automatic. An expired certificate is a common cause of an outage.
+- 502 means a bad answer from the backend and 504 means no answer in time. I only read about these and did not reproduce them.
+- Interview answer: for a site that is down, I check DNS, then the port, then TLS, then the response and the logs, one layer at a time.
+
+Problems and limits (honest):
+- I typed echo $ instead of echo $? once and also pasted old output twice, so I had to rerun commands.
+- I did not practice load balancers, Azure NSGs, DNS record types and TTL, traceroute or packet capture. 502 and 504 were only a lesson.
+- The timeout test used an address that may behave differently on another network, because some networks answer with no route instead of staying silent.
