@@ -1102,3 +1102,26 @@ Problems and limits (honest):
 - I typed echo $ instead of echo $? once and also pasted old output twice, so I had to rerun commands.
 - I did not practice load balancers, Azure NSGs, DNS record types and TTL, traceroute or packet capture. 502 and 504 were only a lesson.
 - The timeout test used an address that may behave differently on another network, because some networks answer with no route instead of staying silent.
+
+## Module 39: Pipeline caching in GitHub Actions
+
+Date: 2026-11-20
+
+What I did:
+- Wrote a workflow called caching-lab with two jobs that install the same three pinned Python packages (pandas, numpy and scipy). The no-cache job uses pip with no cache. The with-cache job uses the pip cache of setup-python.
+- The workflow runs when I push a change to the caching-practice folder or to the workflow file.
+- First run: no-cache took 11 seconds and with-cache took 12 seconds. The cache was empty, and it was saved at the end of that run.
+- I could not re-run it from my Codespace, because the command was refused with Resource not accessible by integration. Instead I pushed a comment-only change to the workflow file to start a second run.
+- Second run: the log showed Cache hit and Cache restored successfully. no-cache took 13 seconds and with-cache took 8 seconds.
+
+What I learned:
+- The first run only fills the cache, so only later runs can benefit. A cache hit is visible in the log, and I check it before I trust a timing.
+- The cache key comes from a hash of requirements.txt. If I change a package version, the key changes and the next run is a cache miss.
+- The gain here was about 4 to 5 seconds, because the packages are small. A bigger dependency set or a slower download would save more.
+- Interview answer: I measure the slow steps first, then add caching keyed on the lock or requirements file, and I confirm the hit in the logs. Azure DevOps has the same idea in its Cache task.
+
+Problems and limits (honest):
+- Only two runs, single measurements. The no-cache job alone varied from 11 to 13 seconds, so the numbers are rough.
+- gh run rerun was refused, so I used a comment-only push to trigger the second run. I did not see the output of my YAML syntax check.
+- I pasted old output a few times and mistyped a branch name once, so some commands had to be rerun.
+- I did not try the explicit actions/cache action, caching across branches, or the Azure DevOps Cache task.
