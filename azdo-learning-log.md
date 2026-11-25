@@ -1125,3 +1125,27 @@ Problems and limits (honest):
 - gh run rerun was refused, so I used a comment-only push to trigger the second run. I did not see the output of my YAML syntax check.
 - I pasted old output a few times and mistyped a branch name once, so some commands had to be rerun.
 - I did not try the explicit actions/cache action, caching across branches, or the Azure DevOps Cache task.
+
+## Module 40: Docker multi-stage builds and image scanning
+
+Date: 2026-11-25
+
+What I did:
+- Wrote a tiny Go program and four Dockerfiles in docker-multistage: single-stage, multi-stage, multi-stage with a newer Go build stage (1.27), and multi-stage with an extra apk upgrade line.
+- Built go-single (413MB on disk, 86.5MB compressed) and go-multi (15.6MB on disk, 4.95MB compressed). Both printed hello from docker.
+- Scanned all images with Trivy 0.57.1 for HIGH and CRITICAL findings. go-single had 24 OS findings (22 HIGH, 2 CRITICAL) plus 21 Go binaries with 26 findings each. go-multi had 2 OS findings and 26 findings in the hello binary. go-multi-new had only the 2 OS findings. go-multi-fixed had 0.
+- Broke it on purpose by copying from a stage called builder, which does not exist. The build failed at the start.
+
+What I learned:
+- Multi-stage builds keep the compiler and tools out of the final image, so it is smaller, faster to pull and has far fewer files to scan.
+- A Go binary carries the Go standard library it was built with, so a small image still needs a current toolchain. Multi-stage removed the 20 tool binaries, and upgrading the build stage removed the findings in my own binary.
+- The remaining 2 findings came from musl in the Alpine base. An apk upgrade line in the final stage cleared them.
+- Docker treats an unknown stage name as an image name, so a typo makes it try to pull that name from Docker Hub instead of failing quietly.
+- apk upgrade makes builds less repeatable. In a real project I would pin the base image by digest and rebuild on a schedule.
+- Interview answer: I use multi-stage builds, a small current base, a non-root user and ordered layers, and I scan the result with Trivy in the pipeline.
+
+Problems and limits (honest):
+- The findings depend on Trivy's database today and will change. I did not open the CVE pages myself.
+- I pasted old output twice and stopped one scan early with Ctrl+C, so I had to rerun commands.
+- The base image tags were not pinned by digest. I set a non-root user but only checked that the program printed its message.
+- I did not try distroless or scratch images, a dockerignore file or build cache mounts, and I did not deploy these images anywhere.
