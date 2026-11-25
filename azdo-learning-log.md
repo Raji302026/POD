@@ -1173,3 +1173,39 @@ Problems and limits (honest):
 - The Codespace slept and the cluster restarted. I saw connection reset and a temporary Forbidden error, and it cleared by itself without recreating the cluster.
 - The node label ingress-ready in my kind config is not needed for Traefik. I did not remove it.
 - I did not try host-based routing, TLS, pathType Exact, the Traefik dashboard, the Gateway API or any other controller.
+
+## Module 42: CronJobs and StatefulSet updates in kind
+
+Date: 2026-11-25
+
+What I did:
+- Reused the kind cluster named config. My kubeconfig had lost its context (kubectl tried localhost:8080), and kind export kubeconfig --name config fixed it.
+- Made a CronJob named ticker that runs every minute and prints the date. The Job names carry the scheduled time in minutes, so they went up by one each minute. The logs showed the time in UTC.
+- Set successfulJobsHistoryLimit to 2. After the fifth run only the two newest finished Jobs and their pods were left, and the older ones were deleted automatically.
+- Added sleep 90 so each run took about 92 seconds while a new run was due every 60. With concurrencyPolicy Allow, two Jobs were Running at the same time.
+- Switched to Forbid. The CronJob events then showed JobAlreadyActive with the message that the prior execution is running and the policy is Forbid, so a run was skipped.
+- Suspended the CronJob with a patch. About 3 minutes later it showed SUSPEND True, ACTIVE 0 and no new Job.
+- Made a 3-pod StatefulSet named web with a headless Service. Set partition 2 and changed the image to busybox:1.36.0. Only web-2 was replaced. Then I set partition 0 and web-1 followed, then web-0, one at a time.
+- Broke it on purpose with image busybox:9.9.9. web-2 was replaced first and went to ErrImagePull and ImagePullBackOff with a not found error, and web-0 and web-1 were not touched.
+- Changed the image back to a good tag. web-2 stayed stuck for more than a minute, so I deleted that pod, and the new web-2 came up on the good image.
+- Deleted both lab namespaces afterwards. The two YAML files are saved in cronjob-practice.
+
+What I learned:
+- A CronJob makes a Job on a schedule, and the Job makes the pod. The history limits only delete finished Jobs. A Job that is still running is never cleaned up.
+- concurrencyPolicy decides what happens when a run is still going. Allow starts another run and they overlap, Forbid skips the new run, and Replace kills the old run. I tested Allow and Forbid.
+- suspend pauses the schedule without deleting the CronJob or its history.
+- A StatefulSet rolling update replaces pods in reverse order, one at a time, and waits for each pod to be Ready. The partition value means only pods with an ordinal at or above it are updated, so partition 2 on three pods is a canary on web-2, and lowering it to 0 rolls out the rest.
+- A bad image stops a StatefulSet rollout at the first pod it touches, so the others keep serving the old version. This is the safety feature.
+- Fixing the spec did not clear the stuck pod by itself in my run. A pod that is not Ready stayed on the bad image until I deleted it.
+- Checking right after a change often showed the old state. I learned to wait for the controller and then check again.
+- Interview answer: A CronJob overlap is controlled by concurrencyPolicy, with Allow, Forbid and Replace, and the Forbid skip shows up as a JobAlreadyActive event. For a safe StatefulSet release I use partition to update the highest ordinal first, check it, and then lower the partition.
+
+Problems and limits (honest):
+- Every result is from one run on a one-node cluster, so the timings are single measurements.
+- The two Jobs that overlapped right after I switched to Forbid were most likely started under Allow. The Forbid proof is the JobAlreadyActive event, not those two Jobs.
+- I only checked the suspended CronJob about 3 minutes after suspending it. I did not check the Job list again before deleting the namespace, and I did not check what happened to the Job that was running at that moment.
+- Pods took about 30 seconds to stop. I think the container ignores the stop signal, but I did not test that.
+- The pods showed 3 restarts later. My guess is the sleep 3600 command ending and the Codespace idling, but I did not check the cause.
+- The saved statefulset-update.yaml has the first image and no partition. The updates were done with kubectl patch and kubectl set image, so the file shows only the starting state.
+- The StatefulSet had no volume claim templates, so I did not test whether data survives an update.
+- I did not try the Replace policy, startingDeadlineSeconds, the timeZone field, the OnDelete strategy or the Parallel pod management policy.
