@@ -1,6 +1,6 @@
 # AZ-400 gap map
 
-Date: 2026-10-16 (updated 2026-11-19)
+Date: 2026-10-16 (updated 2026-11-25)
 
 Marks are based on files in this repo. "Practiced" means a lab or workflow exists. Azure DevOps itself is blocked at work, so most labs use GitHub equivalents.
 
@@ -26,6 +26,8 @@ Marks are based on files in this repo. "Practiced" means a lab or workflow exist
 - Kustomize (base, overlays, patches; dev applied in kind, prod only printed)
 - StatefulSets, DaemonSets and Jobs (stable pod names and volumes, Job retries, one DaemonSet pod on a single node; no CronJob practice)
 - Networking basics (DNS, TCP refused vs timeout, TLS certificates; load balancers and 502/504 only read)
+- Pipeline caching (GitHub Actions pip cache, cache hit proven in the logs, about 12 s down to 8 s on a small package set; Azure DevOps Cache task not tried)
+- Docker multi-stage builds (413MB single-stage vs 15.6MB multi-stage, Trivy findings down to zero with a newer Go toolchain and apk upgrade; base images not pinned by digest in the lab)
 
 ## Partly practiced
 - Azure Artifacts (cheatsheet notes only, no hands-on)
@@ -33,11 +35,11 @@ Marks are based on files in this repo. "Practiced" means a lab or workflow exist
 - Azure Key Vault with pipelines (pipeline YAML and a CI rule blocking hardcoded secrets, never run against a real Key Vault)
 
 ## Not practiced yet
-- Pipeline performance and cost tuning at scale
+- Pipeline performance and cost tuning at scale (only a small caching lab; parallel jobs, agent sizing and cost tracking not practiced)
 - GitOps (blocked by Codespace networking)
 
 ## Next labs, in order
-1. Pipeline caching lab in GitHub Actions (then notes on cost tuning)
-2. Azure basics: identity, networking, Key Vault (needs a subscription or a Learn sandbox)
-3. Docker multi-stage builds
-4. Ingress in kind
+1. Azure basics: identity, networking, Key Vault (needs a subscription or a Learn sandbox)
+2. Ingress in kind
+3. CronJob and StatefulSet updates in kind (the parts of Module 37 not practiced)
+4. GenAI reading: LLM gateway, tokens and Langfuse traces (links to LiteLLM)
