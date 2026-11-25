@@ -1149,3 +1149,27 @@ Problems and limits (honest):
 - I pasted old output twice and stopped one scan early with Ctrl+C, so I had to rerun commands.
 - The base image tags were not pinned by digest. I set a non-root user but only checked that the program printed its message.
 - I did not try distroless or scratch images, a dockerignore file or build cache mounts, and I did not deploy these images anywhere.
+
+## Module 41: Ingress with Traefik in kind
+
+Date: 2026-11-25
+
+What I did:
+- Found out that the NGINX ingress controller is retired, so I used Traefik instead, which still reads normal Ingress objects.
+- Made a new kind cluster, ingress-lab, with a port mapping from node port 30000 to Codespace port 8080. I loaded the Traefik and busybox images into it by hand, and installed Traefik with Helm as a NodePort service.
+- Before any rules existed, curl returned Traefik's own 404 page not found, which proved the traffic reached the controller.
+- Deployed two small apps, web and api, each with a Service, and one Ingress with two path rules. /web returned hello from web, /api returned hello from api, and /other returned 404.
+- Scaled api to zero pods. /api returned 503 with no available server while /web kept working. Scaling back to one pod restored it.
+- Deleted the cluster afterwards. The kind config, the app files and the Ingress file are saved in ingress-practice.
+
+What I learned:
+- An Ingress is only a set of rules, and it does nothing without a controller. The controller reads the rules and routes HTTP traffic by path or host to Services.
+- The three answers I saw: 404 means no rule matched, 503 with no available server means the Service has no ready pods behind it, and 200 means the route and the backend are healthy.
+- A Helm chart checks the settings I give it. My first guess, service.type, was rejected, and helm show values showed the right key, service.spec.type.
+- Interview answer: Service gives one app an address, Ingress routes HTTP from one entry point to many Services and needs a controller. If an Ingress does nothing, I check that a controller is running, that the rules match, and that the Service has ready pods.
+
+Problems and limits (honest):
+- The official Traefik page does not cover kind. The NodePort and port mapping setup was my own design and I tested it in this lab only.
+- The Codespace slept and the cluster restarted. I saw connection reset and a temporary Forbidden error, and it cleared by itself without recreating the cluster.
+- The node label ingress-ready in my kind config is not needed for Traefik. I did not remove it.
+- I did not try host-based routing, TLS, pathType Exact, the Traefik dashboard, the Gateway API or any other controller.
