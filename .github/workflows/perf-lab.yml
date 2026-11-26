@@ -1,3 +1,4 @@
+# Lab results: timeout test (sleep 120 with timeout-minutes 1) ended at the timeout, then the job was removed.
 name: perf-lab
 on:
   push:
@@ -26,9 +27,3 @@ jobs:
     steps:
       - name: part ${{ matrix.part }}
         run: sleep 20
-  hung:
-    runs-on: ubuntu-latest
-    timeout-minutes: 1
-    steps:
-      - name: sleep too long
-        run: sleep 120
