@@ -1359,3 +1359,36 @@ Problems and limits (honest):
 - I did not try audit mode, exemptions, cluster-wide defaults, readOnlyRootFilesystem or runAsGroup. The group stayed 0 in my secure pod.
 - I did not test what happens to pods that already exist when the level changes.
 - I did not look at admission tools such as Kyverno or Gatekeeper, or check an image that already has a non-root user built in.
+
+## Module 48: GitOps with Argo CD in kind
+
+Date: 2026-11-26
+
+What I did:
+- Reused the kind cluster named config and installed Argo CD v3.5.6 from the release install.yaml with server-side apply. The pods came up after a short wait.
+- Made a throwaway branch named gitops-lab, because main is protected. It held a small Deployment named hello (busybox 1.37.0, 2 replicas) under gitops-practice/app.
+- Wrote an Application named hello that tracks the gitops-lab branch, with automated sync, prune, selfHeal and CreateNamespace. The cluster then showed 2 pods, Synced and Healthy.
+- Changed replicas from 2 to 3 in Git and pushed. The cluster stayed at 2 pods for some minutes and then made the third pod by itself, before I ran a manual refresh.
+- Scaled the Deployment to 1 by hand with kubectl. Within seconds Argo CD replaced the pods and the Deployment was back at 3 of 3.
+- Pushed a bad image tag (busybox 9.99.99) on purpose and asked for a refresh. The Application showed Synced and Progressing. One new pod was in ImagePullBackOff and the 3 old pods kept running.
+- Changed the tag back in Git and pushed. The broken pod went away and the Application returned to Synced and Healthy with the same 3 old pods.
+- Deleted the Application, the gitops-app namespace and the Argo CD install, then checked that no argoproj CRDs were left.
+
+What I learned:
+- GitOps means Git is the source of truth and a controller inside the cluster pulls from it and makes the cluster match. I did not run kubectl apply for the app after the first Application.
+- Argo CD checks Git on a timer, so a push does not change the cluster at once. A manual refresh annotation asks it to check right now.
+- Self-heal watches the cluster as well as Git. A manual change that disagrees with Git was reverted within seconds.
+- Synced only means the cluster matches Git. It does not mean the app works. The bad image was Synced, and the health status was Progressing.
+- Argo CD did not protect the app from the bad tag. The Kubernetes rolling update did, by keeping the old pods until a new one was ready.
+- The GitOps way to roll back is to fix Git and let the controller follow, not to repair the cluster by hand.
+- Deleting the Application did not remove the gitops-app namespace, so I deleted it by hand. My Application had no cleanup finalizer.
+
+Problems and limits (honest):
+- I predicted the manual refresh would make the third pod. It did not. The timer did, before I ran it. I did not measure the polling delay, because I do not know the exact push time.
+- I did not catch the moment the Deployment was at 1 pod, so I have no exact number of seconds for self-heal. I also did not capture whether OutOfSync appeared.
+- For the bad image I used the manual refresh to save time, so I did not see how long the timer would have taken.
+- I did not capture the event text for the image pull error. I only saw ImagePullBackOff and the bad tag in the pod description.
+- I did not wait to see whether the health status changed from Progressing to Degraded.
+- I did not test prune, invalid YAML in Git, a private repo, the web UI or CLI login, Helm or Kustomize sources, ApplicationSet, projects, RBAC or a high-availability install.
+- The install steps came from a release page and a third-party article, because the official page was blocked.
+- Single run on a one-node kind cluster. The repo is public, so I used no credentials.

@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: hello
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Raji302026/POD.git
+    targetRevision: gitops-lab
+    path: gitops-practice/app
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gitops-app
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
