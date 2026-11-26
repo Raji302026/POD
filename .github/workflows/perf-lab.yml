@@ -5,6 +5,9 @@ on:
       - 'perf-practice/**'
       - '.github/workflows/perf-lab.yml'
   workflow_dispatch:
+concurrency:
+  group: perf-lab-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   sequential:
     runs-on: ubuntu-latest
@@ -23,6 +26,9 @@ jobs:
     steps:
       - name: part ${{ matrix.part }}
         run: sleep 20
-concurrency:
-  group: perf-lab-${{ github.ref }}
-  cancel-in-progress: true
+  hung:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: sleep too long
+        run: sleep 120
