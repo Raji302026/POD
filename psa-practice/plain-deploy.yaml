@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: plain-deploy
+  namespace: psa-lab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: plain-deploy
+  template:
+    metadata:
+      labels:
+        app: plain-deploy
+    spec:
+      containers:
+      - name: app
+        image: busybox:1.37.0
+        command: ["sleep", "3600"]

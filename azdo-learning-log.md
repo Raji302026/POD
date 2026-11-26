@@ -1331,3 +1331,31 @@ Problems and limits (honest):
 - I did not test billed minutes, self-hosted agent sizing, cost tracking, or combining caching with a matrix.
 - I did not test cancel-in-progress on pull requests or on a deploy workflow, and I did not test the default job timeout.
 - The second run in the cancel test took 1m22s against 1m7s for the first run. That is one measurement each, and I do not know the reason.
+
+## Module 47: Pod security with securityContext and Pod Security Admission in kind
+
+Date: 2026-11-26
+
+What I did:
+- Reused the kind cluster named config and made a namespace named psa-lab. I labelled it with enforce set to restricted, which is the strictest built-in Pod Security level.
+- Applied a plain busybox pod with no securityContext. The API server refused it and listed four problems: allowPrivilegeEscalation was not false, capabilities were not dropped, runAsNonRoot was not true, and there was no seccompProfile.
+- Wrote a second pod that set runAsNonRoot, runAsUser 1000, a RuntimeDefault seccompProfile, allowPrivilegeEscalation false and drop ALL for capabilities. It was accepted and ran, and id showed uid 1000 with gid 0.
+- Applied a Deployment with the plain pod template. The Deployment itself was accepted and showed 0 of 1 ready, no pod appeared, and the ReplicaSet events showed FailedCreate with the same violates PodSecurity message, repeated as it retried.
+- Changed the namespace to enforce baseline and warn restricted. The Deployment got its pod by itself without any re-apply. Applying the plain pod again printed a warning that it would violate restricted, and the pod was created.
+- Applied a pod with privileged set to true. The baseline level refused it with the message that privileged must not be set.
+- Deleted the namespace afterwards. The three pod files and the Deployment file are saved in psa-practice.
+
+What I learned:
+- Pod Security Admission is built into Kubernetes and is switched on by labels on a namespace. There are three levels, privileged, baseline and restricted, and three modes, enforce, warn and audit. I tried enforce and warn, and I did not try audit.
+- The restricted level wants four things on a pod, and the error message names each one, so I could fix the pod by reading it.
+- runAsNonRoot only works if the container really runs as a non-root user. Busybox runs as root by default, so I also set runAsUser 1000. I did not test what happens without it.
+- A Deployment can be accepted while its pods are blocked. The failure shows up in the ReplicaSet events, so with 0 of 1 ready and no pods I run kubectl describe rs.
+- Warn mode shows what would break without blocking it, so a sensible rollout is to enforce baseline and warn about restricted, fix what the warnings list, and then enforce restricted.
+- The baseline level allows root but still blocks things like a privileged container.
+- Interview answer: Pod Security Admission checks each pod when it is created, using namespace labels. I use baseline or restricted on application namespaces, I check warnings before enforcing, and if a Deployment has no pods I read the ReplicaSet events.
+
+Problems and limits (honest):
+- Every result is from one run on a one-node cluster. The level was set to latest, so the exact messages may change between Kubernetes versions.
+- I did not try audit mode, exemptions, cluster-wide defaults, readOnlyRootFilesystem or runAsGroup. The group stayed 0 in my secure pod.
+- I did not test what happens to pods that already exist when the level changes.
+- I did not look at admission tools such as Kyverno or Gatekeeper, or check an image that already has a non-root user built in.
