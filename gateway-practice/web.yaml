@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: gw-lab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: app
+        image: busybox:1.37.0
+        command: ["sh", "-c", "mkdir -p /www && echo hello from web > /www/web && httpd -f -p 8080 -h /www"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: gw-lab
+spec:
+  selector:
+    app: web
+  ports:
+  - port: 80
+    targetPort: 8080
