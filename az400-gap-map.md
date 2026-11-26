@@ -33,6 +33,7 @@ Marks are based on files in this repo. "Practiced" means a lab or workflow exist
 - Resource requests and limits (OOMKilled with exit code 137, Pending from Insufficient cpu, node allocated resources, QoS Burstable; CPU throttling, Guaranteed and BestEffort classes and eviction not tried)
 - Gateway API with Traefik (GatewayClass, Gateway and HTTPRoute; a refused route fixed through the namespace policy, a BackendNotFound status; weighted splitting, TLS, ReferenceGrant and ListenerSet not tried)
 - HPA autoscaling with metrics-server (kind needed the kubelet insecure TLS flag, lab only; scale up to 4 and back down to 1, a missing CPU request leaves the target unknown; memory and custom metrics, KEDA and a real request load not tried)
+- Pod security (securityContext and Pod Security Admission in kind: restricted rejects a plain pod, a fixed pod runs as non-root, a Deployment is blocked at the ReplicaSet, baseline vs restricted with warn mode; audit mode, exemptions and Kyverno or Gatekeeper not tried)
 
 ## Partly practiced
 - Azure Artifacts (cheatsheet notes only, no hands-on)
