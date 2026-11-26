@@ -38,9 +38,9 @@ Marks are based on files in this repo. "Practiced" means a lab or workflow exist
 - Azure Artifacts (cheatsheet notes only, no hands-on)
 - Azure Pipelines YAML (files exist, but never run in Azure DevOps)
 - Azure Key Vault with pipelines (pipeline YAML and a CI rule blocking hardcoded secrets, never run against a real Key Vault)
+- Pipeline performance (GitHub Actions: caching, a parallel matrix vs sequential jobs, cancelling superseded runs, path filters, job timeouts; agent sizing, cost tracking and Azure DevOps equivalents not tried)
 
 ## Not practiced yet
-- Pipeline performance and cost tuning at scale (only a small caching lab; parallel jobs, agent sizing and cost tracking not practiced)
 - GitOps (blocked by Codespace networking)
 
 ## Next labs, in order
