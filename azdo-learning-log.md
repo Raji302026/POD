@@ -1392,3 +1392,33 @@ Problems and limits (honest):
 - I did not test prune, invalid YAML in Git, a private repo, the web UI or CLI login, Helm or Kustomize sources, ApplicationSet, projects, RBAC or a high-availability install.
 - The install steps came from a release page and a third-party article, because the official page was blocked.
 - Single run on a one-node kind cluster. The repo is public, so I used no credentials.
+
+## Module 49: Kubernetes RBAC with roles and bindings in kind
+
+Date: 2026-11-26
+
+What I did:
+- Reused the kind cluster named config. Made a namespace named rbac-lab and a service account named dev-bot, then used kubectl auth can-i with --as to test what it could do.
+- Checked a brand new service account first. It could not list pods in rbac-lab or in default.
+- Made a Role named pod-reader that allows get, list and watch on pods only. Before binding it, can-i list pods still said no. A role alone gave nothing.
+- Made a RoleBinding to give dev-bot that role. After that it could list pods in rbac-lab, but not in default, not delete pods and not list deployments.
+- Added a second RoleBinding to the built-in view ClusterRole inside rbac-lab. It could then list deployments, but still could not delete pods or list pods in default.
+- Made a ClusterRoleBinding to view for the whole cluster. It could then list pods in default and kube-system, but still could not delete pods. It could not read secrets in default.
+- Deleted the rbac-lab namespace. The ClusterRoleBinding was still there afterwards, so I deleted it by hand and confirmed it was gone with NotFound.
+
+What I learned:
+- An RBAC permission has three parts: who (a service account here), what (a Role or ClusterRole) and where (the namespace, or the whole cluster). Azure RBAC uses the same idea with a security principal, a role definition and a scope.
+- A new identity starts with no permissions. A role does nothing until a binding connects it to a who.
+- Permissions add up. The second binding added read access and took nothing away.
+- A RoleBinding stays inside its namespace, even when it points to a ClusterRole. A ClusterRoleBinding opens every namespace, so the scope is the main thing to keep small.
+- The built-in view role is read-only and did not allow reading secrets in default.
+- A ClusterRoleBinding is not stored in a namespace, so deleting the namespace left it behind. Bindings need clean-up when an identity is removed.
+- kubectl auth can-i with --as is a quick way to test permissions without making a real request.
+
+Problems and limits (honest):
+- I made a typo in the first default check (dev-botc), so that answer proved nothing. I reran it with the right name and it said no.
+- I did not paste the role creation output at first. I confirmed the role with kubectl get role, because a RoleBinding can be created for a role that does not exist.
+- I only tested with can-i. I did not run a real pod using the service account or make real API calls with its token.
+- This was Kubernetes RBAC, not Azure RBAC. I did not practice Azure role assignments, deny assignments or Entra ID roles in this lab.
+- I did not make a custom ClusterRole, test aggregated roles, or test what happens if a new service account reuses the old name.
+- Single run on a one-node kind cluster. No lab files were kept, because I used kubectl commands only.
