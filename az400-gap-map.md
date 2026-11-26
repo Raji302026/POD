@@ -18,7 +18,7 @@ Marks are based on files in this repo. "Practiced" means a lab or workflow exist
 - Policy as code (Conftest/OPA)
 - Image hardening and scanning (Trivy)
 - SBOM generation and scanning (CycloneDX via Trivy, trivy sbom)
-- Kubernetes RBAC (Role, RoleBinding, kubectl auth can-i --as)
+- Kubernetes RBAC (Role, RoleBinding, ClusterRoleBinding, built-in view role, scope, kubectl auth can-i --as: a cluster binding survived deleting its namespace; custom ClusterRole, a real pod using a service account token and Azure RBAC not tried)
 - Blue/green releases (Service selector switching between slot-labelled Deployments in kind, not Helm)
 - Advanced Git (rebase, cherry-pick, reflog recovery, conflict resolution, in a practice repo)
 - ConfigMaps and Secrets (env vars vs mounted files, a Secret is only base64, missing-Secret failure)
