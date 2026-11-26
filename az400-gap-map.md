@@ -34,6 +34,7 @@ Marks are based on files in this repo. "Practiced" means a lab or workflow exist
 - Gateway API with Traefik (GatewayClass, Gateway and HTTPRoute; a refused route fixed through the namespace policy, a BackendNotFound status; weighted splitting, TLS, ReferenceGrant and ListenerSet not tried)
 - HPA autoscaling with metrics-server (kind needed the kubelet insecure TLS flag, lab only; scale up to 4 and back down to 1, a missing CPU request leaves the target unknown; memory and custom metrics, KEDA and a real request load not tried)
 - Pod security (securityContext and Pod Security Admission in kind: restricted rejects a plain pod, a fixed pod runs as non-root, a Deployment is blocked at the ReplicaSet, baseline vs restricted with warn mode; audit mode, exemptions and Kyverno or Gatekeeper not tried)
+- GitOps with Argo CD (an Application tracking a Git branch with automated sync, prune and selfHeal in kind: a Git change reached the cluster on its own polling timer, a manual scale was reverted within seconds, a bad image tag showed Synced but Progressing while old pods kept running, and a Git fix recovered it; prune, invalid YAML, private repos, UI or CLI login, Helm or Kustomize sources and ApplicationSet not tried)
 
 ## Partly practiced
 - Azure Artifacts (cheatsheet notes only, no hands-on)
@@ -42,7 +43,7 @@ Marks are based on files in this repo. "Practiced" means a lab or workflow exist
 - Pipeline performance (GitHub Actions: caching, a parallel matrix vs sequential jobs, cancelling superseded runs, path filters, job timeouts; agent sizing, cost tracking and Azure DevOps equivalents not tried)
 
 ## Not practiced yet
-- GitOps (blocked by Codespace networking)
+- Nothing listed right now
 
 ## Next labs, in order
 1. Azure basics: identity, networking, Key Vault (needs a subscription or a Learn sandbox)
