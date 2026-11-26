@@ -1,0 +1,25 @@
+name: perf-lab
+on:
+  push:
+    paths:
+      - 'perf-practice/**'
+      - '.github/workflows/perf-lab.yml'
+  workflow_dispatch:
+jobs:
+  sequential:
+    runs-on: ubuntu-latest
+    steps:
+      - name: part 1
+        run: sleep 20
+      - name: part 2
+        run: sleep 20
+      - name: part 3
+        run: sleep 20
+  parallel:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        part: [1, 2, 3]
+    steps:
+      - name: part ${{ matrix.part }}
+        run: sleep 20
