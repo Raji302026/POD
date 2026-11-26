@@ -1270,3 +1270,37 @@ Problems and limits (honest):
 - I did not record the result after applying the corrected route, so the fix is not proven in my notes.
 - Access was only through kubectl port-forward, so I did not test a real external address or a load balancer.
 - I did not try weighted traffic splitting, header matching, hostnames, TLS or HTTPS, a ReferenceGrant for backends in another namespace, a ListenerSet, a selector namespace policy, or the ingress2gateway conversion tool.
+
+## Module 45: HPA autoscaling with metrics-server in kind
+
+Date: 2026-11-26
+
+What I did:
+- Checked first that kubectl top nodes failed with Metrics API not available, and that no metrics API was registered.
+- Applied the metrics-server release manifest. I applied it twice with different versions, so the Deployment ended on image v0.9.1 with two ReplicaSets and two pods.
+- Both pods showed CreateContainerConfigError after the Codespace had slept. The event said services have not yet been read at least once, cannot construct envvars, which cleared by itself when the kubelet restarted the containers.
+- The real problem was that the pods never became ready. The readiness probe returned HTTP 500, and the log said the node certificate could not be validated because it had no IP SANs. The metrics API showed False with MissingEndpoints.
+- Added the flag --kubelet-insecure-tls with a JSON patch. The new pod became ready and kubectl top nodes showed 128m CPU at 6 percent and 1253Mi memory at 15 percent. The flag turns off the certificate check, so I used it only in this throwaway cluster.
+- Made a Deployment named burner with a CPU request of 100m and a limit of 200m, and an HPA with a 50 percent CPU target, 1 to 4 replicas and a 60 second scale-down window. The idle pod used 0m and the HPA showed 0 percent of 50 percent.
+- Changed the pod command to an endless loop. The pod used 202m, the HPA showed 200 percent of 50 percent and went from 1 to 4 replicas in one jump. I had predicted steps, and that was wrong.
+- Changed the command back to sleep. The rollout replaced the pods, the target showed unknown for a short time, and the HPA then scaled back to 1 with the reason All metrics below target. The two rescale events were about 2.5 minutes apart. I did not note the exact time from my patch to the scale-down.
+- Removed the whole resources block. At first the HPA showed unknown with the message did not receive metrics for targeted pods, which also happens for a brand-new pod. A few minutes later the condition said missing request for cpu in container burner.
+- Deleted the hpa-lab namespace afterwards and left metrics-server installed. The two files are saved in hpa-practice.
+
+What I learned:
+- An HPA and kubectl top both need metrics-server. Without it, kubectl top says Metrics API not available.
+- The HPA measures CPU as a percentage of the pod's CPU request, not of the node. With a 100m request and a pod using 200m, it saw 200 percent, and with a 50 percent target it asked for 4 times as many pods, which is the maximum I had set.
+- The HPA reacts with a delay. The metrics lag by about a minute, and the HPA checks about every 15 seconds. A new pod shows unknown for the first minute, so I wait before deciding something is broken.
+- Scaling down is held back by a stabilization window. I shortened it to 60 seconds for the lab, so these timings are not the default behaviour.
+- With no CPU request, the HPA cannot compute a percentage. The condition ScalingActive was False, and after a few minutes its message named the pod and the container that had no CPU request.
+- A CreateContainerConfigError with the message about services not yet read can be a short start-up error after a cluster restart. It cleared by itself. The real problem was a different one, and I only found it by reading the pod log.
+- In kind, metrics-server could not validate the node certificate. The flag --kubelet-insecure-tls fixed it, but it turns off a security check, so it belongs in a lab and not in a real cluster.
+- Interview answer: An HPA scales a Deployment on average utilization against a target, and it needs metrics-server and CPU requests on the pods. If the target shows unknown, I check that kubectl top works, that the pods have requests, and what the conditions in kubectl describe hpa say.
+
+Problems and limits (honest):
+- Every result is from one run on a one-node cluster, so the timings are single measurements. The Codespace also slept during the lab.
+- I applied metrics-server twice with different versions and ended with two ReplicaSets. I did not work out exactly which pod ran which version.
+- The load was a pod burning its own CPU in a loop, not real traffic, so I did not test the HPA under a request load.
+- I did not record the exact time between my patch and the scale-down to 1 pod.
+- I did not run the check that the pod had an empty resources block. The HPA message named the missing request, which is what I relied on.
+- I did not try memory metrics, several metrics at once, custom or external metrics, the vertical pod autoscaler, a cluster autoscaler, KEDA, or the default scale-down window.
