@@ -1209,3 +1209,30 @@ Problems and limits (honest):
 - The saved statefulset-update.yaml has the first image and no partition. The updates were done with kubectl patch and kubectl set image, so the file shows only the starting state.
 - The StatefulSet had no volume claim templates, so I did not test whether data survives an update.
 - I did not try the Replace policy, startingDeadlineSeconds, the timeZone field, the OnDelete strategy or the Parallel pod management policy.
+
+## Module 43: Resource requests, limits and QoS in kind
+
+Date: 2026-11-26
+
+What I did:
+- Reused the kind cluster named config. I started the lab the evening before and finished it the next morning, after the Codespace had slept. The cluster was still running.
+- Made a pod named mem-hog with a memory request of 20Mi and a limit of 50Mi. Its command, exec tail /dev/zero, keeps reading data with no line breaks, so memory grows without end. The pod went to OOMKilled with exit code 137. I set restartPolicy to Never so the status stayed visible.
+- Made a pod named big-ask that requested 100 CPUs. It stayed Pending and never crashed. The scheduler event said FailedScheduling, 0/1 nodes are available, 1 Insufficient cpu.
+- Looked at the node with kubectl describe node. CPU requests were 950m, shown as 47 percent, so the node has about 2 CPUs. The CPU limits column showed 0 because I set none.
+- Changed the request to 100m. I deleted the pod and applied it again, and it went to Running. I did not try a plain apply first, so I did not see the error that a pod spec cannot be changed in place.
+- Checked the QoS class of both pods with a custom-columns query. Both were Burstable.
+- Deleted the lab namespace afterwards. The two pod files are saved in resources-practice.
+
+What I learned:
+- A request is what the scheduler reserves and counts when it places a pod. A limit is the ceiling while the container runs. A container that goes over its memory limit is killed, and the pod shows OOMKilled with exit code 137, which is 128 plus signal 9.
+- A Pending pod has not crashed, because it never got onto a node. The scheduler event under kubectl describe pod says why, here that one node did not have enough CPU. I had already practiced this in an earlier module with 64 CPU, so this part was a repeat.
+- kubectl describe node shows Allocated resources, which is the sum of the requests of the pods placed on it as a percentage of the node. A Pending pod is not counted in those numbers.
+- I deleted and recreated the pod to change its request. I was told a pod spec cannot be changed in place for resources, but I did not run a plain apply first, so I did not see that error myself.
+- Both of my pods had the QoS class Burstable. From general Kubernetes knowledge, Guaranteed needs requests equal to limits for CPU and memory in every container, and BestEffort means no requests or limits and is evicted first. I did not create either of those.
+- Interview answer: For a Pending pod I read the events under describe pod and look for insufficient CPU or memory, taints, or a volume that is not bound. For a container that restarts with exit code 137 and OOMKilled, I raise the memory limit or fix the memory use, and I set requests from measured usage.
+
+Problems and limits (honest):
+- Every result is from one run on a one-node cluster.
+- The memory-hog command was my own design. It worked on the first try here, and I did not measure how much memory it used before it was killed.
+- I did not try CPU limits or CPU throttling, the Guaranteed or BestEffort classes, the eviction order under real memory pressure, a LimitRange, a ResourceQuota or autoscaling.
+- The memory-hog pod used restartPolicy Never, so I did not see CrashLoopBackOff for it.
