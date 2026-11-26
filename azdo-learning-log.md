@@ -1236,3 +1236,37 @@ Problems and limits (honest):
 - The memory-hog command was my own design. It worked on the first try here, and I did not measure how much memory it used before it was killed.
 - I did not try CPU limits or CPU throttling, the Guaranteed or BestEffort classes, the eviction order under real memory pressure, a LimitRange, a ResourceQuota or autoscaling.
 - The memory-hog pod used restartPolicy Never, so I did not see CrashLoopBackOff for it.
+
+## Module 44: Gateway API with Traefik in kind
+
+Date: 2026-11-26
+
+What I did:
+- Read the Traefik v3.8 docs for the Gateway API provider before starting. They install the Gateway API CRDs from release v1.7.0 and turn the provider on with providers.kubernetesGateway.enabled.
+- Reused the kind cluster named config. I loaded the traefik v3.8.0 image into it by hand, applied the CRDs, and installed the traefik chart 43.0.0 with the Gateway provider on and a ClusterIP service.
+- The chart made its own GatewayClass named traefik and a Gateway named traefik-gateway in the traefik namespace. The class showed Accepted True and the Gateway showed Programmed True. The provider is off by default, and gateway.enabled is true by default once it is on.
+- The Gateway had one listener named web on port 8000, which matches Traefik's own web entrypoint, and its allowedRoutes setting was from Same.
+- Reused the web and api apps from the Ingress lab in a new namespace, gw-lab, and wrote one HTTPRoute with two path rules, /web and /api.
+- The route was refused. Accepted was False with the reason NotAllowedByListeners, while ResolvedRefs was True. The route was in gw-lab and the Gateway only accepted routes from its own namespace.
+- Fixed it with helm upgrade and gateway.listeners.web.namespacePolicy.from=All. The listener then showed from All and the route became Accepted.
+- Used kubectl port-forward on port 8081. /web returned hello from web, /api returned hello from api, and /other returned 404. The browser got 404 on the root path, because no rule matches it.
+- Broke it on purpose with a wrong Service name. ResolvedRefs went to False with BackendNotFound, /api returned HTTP 500 with an empty body, and /web kept working.
+- Applied the correct route file again to fix it. I did not record the result of that check.
+- Removed the namespaces, the Helm release and the Gateway API CRDs afterwards. The app files and the route file are saved in gateway-practice.
+
+What I learned:
+- The Gateway API splits what Ingress puts in one object. A GatewayClass names the controller, a Gateway is the entry point with its listeners, and an HTTPRoute holds the routing rules. The platform side can own the Gateway and the app side can own the routes.
+- A Gateway decides which namespaces may attach routes to it. Mine allowed only its own namespace, so a route in another namespace was refused with NotAllowedByListeners. The route status told me this without reading any logs.
+- A listener port has to match a port Traefik really listens on. The chart's Gateway used 8000, the same as the web entrypoint, and the Service port 80 forwards to it. I had to read the chart's values and the Gateway to find that out.
+- The route status has two separate conditions. Accepted says whether the Gateway took the route, and ResolvedRefs says whether the backend Services exist. A missing backend showed ResolvedRefs False with BackendNotFound while the other route kept working.
+- A 404 on the root path was Traefik answering because no rule matched, which proves the traffic reached the controller.
+- Setting from All is fine in a lab. On a shared cluster I would use a selector on namespace labels so only approved namespaces can attach routes.
+- Interview answer: Ingress is one object for routing with controller-specific annotations, and the Gateway API separates GatewayClass, Gateway and HTTPRoute so platform and app teams own different parts. If a route does not work I read its status conditions first, Accepted for the Gateway side and ResolvedRefs for the backend side.
+
+Problems and limits (honest):
+- Every result is from one run on a one-node cluster with one controller, Traefik chart 43.0.0, so the Gateway values and behaviour are specific to that chart version.
+- The value shape for namespacePolicy was my own guess from the Gateway API field. It worked, and the listener showed from All afterwards, but the chart comment did not state it.
+- The standard install of the CRDs listed more route kinds than I expected, such as TCPRoute and UDPRoute. I do not know why, and I only used HTTPRoute.
+- I did not record the result after applying the corrected route, so the fix is not proven in my notes.
+- Access was only through kubectl port-forward, so I did not test a real external address or a load balancer.
+- I did not try weighted traffic splitting, header matching, hostnames, TLS or HTTPS, a ReferenceGrant for backends in another namespace, a ListenerSet, a selector namespace policy, or the ingress2gateway conversion tool.
