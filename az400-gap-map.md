@@ -28,9 +28,10 @@ Marks are based on files in this repo. "Practiced" means a lab or workflow exist
 - Networking basics (DNS, TCP refused vs timeout, TLS certificates; load balancers and 502/504 only read)
 - Pipeline caching (GitHub Actions pip cache, cache hit proven in the logs, about 12 s down to 8 s on a small package set; Azure DevOps Cache task not tried)
 - Docker multi-stage builds (413MB single-stage vs 15.6MB multi-stage, Trivy findings down to zero with a newer Go toolchain and apk upgrade; base images not pinned by digest in the lab)
-- Ingress with Traefik in kind (path routing to two apps, 404 vs 503 behaviour; the NGINX ingress controller is retired so Traefik was used; host routing, TLS and Gateway API not tried)
+- Ingress with Traefik in kind (path routing to two apps, 404 vs 503 behaviour; the NGINX ingress controller is retired so Traefik was used; host routing and TLS not tried)
 - CronJobs and StatefulSet updates (CronJob history limit, Allow vs Forbid, suspend; StatefulSet partition canary, a bad image and a stuck pod that needed a manual delete; Replace policy, timeZone and OnDelete not tried)
 - Resource requests and limits (OOMKilled with exit code 137, Pending from Insufficient cpu, node allocated resources, QoS Burstable; CPU throttling, Guaranteed and BestEffort classes and eviction not tried)
+- Gateway API with Traefik (GatewayClass, Gateway and HTTPRoute; a refused route fixed through the namespace policy, a BackendNotFound status; weighted splitting, TLS, ReferenceGrant and ListenerSet not tried)
 
 ## Partly practiced
 - Azure Artifacts (cheatsheet notes only, no hands-on)
@@ -44,4 +45,3 @@ Marks are based on files in this repo. "Practiced" means a lab or workflow exist
 ## Next labs, in order
 1. Azure basics: identity, networking, Key Vault (needs a subscription or a Learn sandbox)
 2. GenAI reading: LLM gateway, tokens and Langfuse traces (links to LiteLLM)
-3. Gateway API basics (the successor to Ingress; reading first)
