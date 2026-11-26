@@ -23,3 +23,6 @@ jobs:
     steps:
       - name: part ${{ matrix.part }}
         run: sleep 20
+concurrency:
+  group: perf-lab-${{ github.ref }}
+  cancel-in-progress: true
