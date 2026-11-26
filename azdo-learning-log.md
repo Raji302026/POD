@@ -1304,3 +1304,30 @@ Problems and limits (honest):
 - I did not record the exact time between my patch and the scale-down to 1 pod.
 - I did not run the check that the pod had an empty resources block. The HPA message named the missing request, which is what I relied on.
 - I did not try memory metrics, several metrics at once, custom or external metrics, the vertical pod autoscaler, a cluster autoscaler, KEDA, or the default scale-down window.
+
+## Module 46: Pipeline performance with GitHub Actions
+
+Date: 2026-11-26
+
+What I did:
+- Wrote a workflow named perf-lab that runs on a push to the perf-practice folder or to the workflow file, and can also be started by hand. This is GitHub Actions, used as a stand-in because Azure DevOps is blocked on my network.
+- Compared one job with three 20-second steps against a matrix of three parallel jobs doing the same work. The sequential job took 1m3s, and the parallel jobs took 23s, 23s and 22s. The matrix finished in about 23 seconds on the clock but used about 68 seconds of runner time in total, against 63 for the sequential job.
+- Added a concurrency group with cancel-in-progress and pushed twice, about 8 seconds apart. The older run stopped at about 24 seconds and all four of its jobs were cancelled, with the annotation Canceling since a higher priority waiting request exists. The newer run finished with success in 1m22s.
+- Pushed a file outside the path filter, and no perf-lab run started.
+- Added a job that sleeps for 120 seconds with timeout-minutes set to 1. It was stopped with the annotation that the job exceeded the maximum execution time of 1m0s. It showed 1m14s in total, and the other four jobs passed.
+- Removed the hung job and the test file afterwards. The workflow and a small readme are saved in the repo.
+
+What I learned:
+- Parallel jobs save time on the clock but not runner time. The matrix finished in about a third of the time, and each job paid its own start-up, so the total was slightly higher. It pays off when the jobs are independent and long compared with their start-up.
+- From general knowledge, not tested here: on a private repo each job is billed rounded up to the next minute, so many short parallel jobs can cost more than one longer job. My repo is public, so I was not charged.
+- A concurrency group with cancel-in-progress stops an older run when a newer push arrives on the same branch. The cancelled run used about 24 seconds instead of about 63. I would not use it on a deployment workflow, because it could cancel a deploy half way.
+- A path filter stops a run from starting at all when the changed files do not match. With hundreds of pipelines this is probably the biggest saving of the four, but I only tested it on one workflow.
+- timeout-minutes stops a hung job at the limit. Without it, a job runs until the default limit, which I believe is much longer, but I did not test the default.
+- I believe the Azure DevOps equivalents are parallel and matrix strategies, trigger paths, batch for superseded runs, and timeoutInMinutes, but I did not try any of them.
+- Interview answer: To make slow pipelines faster and cheaper I run independent jobs in parallel, cache dependencies, filter triggers by path, cancel superseded runs on branches, and set timeouts so a hung job cannot burn minutes.
+
+Problems and limits (honest):
+- This was GitHub Actions on a public repo, not Azure DevOps, and every result is a single run with sleep commands, not real builds.
+- I did not test billed minutes, self-hosted agent sizing, cost tracking, or combining caching with a matrix.
+- I did not test cancel-in-progress on pull requests or on a deploy workflow, and I did not test the default job timeout.
+- The second run in the cancel test took 1m22s against 1m7s for the first run. That is one measurement each, and I do not know the reason.
