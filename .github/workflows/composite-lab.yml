@@ -1,0 +1,21 @@
+name: composite-lab
+on:
+  push:
+    paths:
+      - '.github/actions/greet/**'
+      - '.github/workflows/composite-lab.yml'
+permissions:
+  contents: read
+jobs:
+  greet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - id: hello
+        uses: ./.github/actions/greet
+        with:
+          who: Raji
+      - env:
+          MSG: ${{ steps.hello.outputs.message }}
+        run: echo "Output was $MSG"
