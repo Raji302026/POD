@@ -41,7 +41,7 @@ Marks are based on files in this repo. "Practiced" means a lab or workflow exist
 - Azure Pipelines YAML (files exist, but never run in Azure DevOps)
 - Azure Key Vault with pipelines (pipeline YAML and a CI rule blocking hardcoded secrets, never run against a real Key Vault)
 - Pipeline performance (GitHub Actions: caching, a parallel matrix vs sequential jobs, cancelling superseded runs, path filters, job timeouts; agent sizing, cost tracking and Azure DevOps equivalents not tried)
-- LLM gateway basics (LiteLLM in front of a fake model: one endpoint, model name mapping, a bad key and an unknown model rejected before the backend, backend down gives HTTP 500 while the gateway stays alive; no database so no virtual keys or budgets; fallbacks, real models and Langfuse not tried)
+- LLM gateway basics (LiteLLM in front of a fake model: one endpoint, model name mapping, a bad key and an unknown model rejected before the backend, backend down gives HTTP 500 while the gateway stays alive; two fake backends behind one model name (one down gave no client errors, both down gave 500); no database so no virtual keys or budgets; fallbacks to another model, retry settings, real models and Langfuse not tried)
 
 ## Not practiced yet
 - Nothing listed right now
