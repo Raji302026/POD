@@ -1479,3 +1479,30 @@ Problems and limits (honest):
 - I did not test what happens with untrusted input in the unsafe pattern. I only used the safe pattern.
 - The checkout action is on v7, which came from an earlier Dependabot change, and it is not pinned by commit.
 - Single run on GitHub-hosted runners. The workflow stays in the repo and runs again when its files change.
+
+## Module 52: Init containers and sidecars in kind
+
+Date: 2026-11-27
+
+What I did:
+- Reused the kind cluster named config and made a namespace named init-lab.
+- Made a pod named waiter with an init container that keeps asking DNS for a service named db-svc until it exists. While the service was missing, the pod showed Init:0/1 and READY 0/1, the init log repeated NXDOMAIN and waiting, and the main container did not start.
+- Made the service with kubectl create service clusterip. The pod then went to 1/1 Running, the init log showed an address for db-svc and the app printed app started. I checked a couple of minutes later, so I did not measure how long it took.
+- Made a pod named bad-init whose init container exits with an error. It went to Init:CrashLoopBackOff within 7 seconds with 1 restart. The init log said failing, and asking for the app log gave a PodInitializing error because the main container never ran.
+- Made a pod named logger with two containers that share an emptyDir volume. The app writes the date to a file every 2 seconds and a second container named shipper reads the file with tail. It showed 2/2 Running and the shipper log showed the date lines.
+- Made a broken copy named logger-broken where the shipper has no volume mount. It still showed 2/2 Running, but the shipper log said it could not open the log file.
+- Deleted the namespace afterwards. The four pod files are saved in init-practice.
+
+What I learned:
+- An init container runs to completion before the main containers start. Pods can have several, and they run one after another. This makes them a good way to wait for a dependency or to prepare something first.
+- STATUS shows the progress. Init:0/1 means 0 of 1 init containers are done. A failing init container gives Init:Error and then Init:CrashLoopBackOff, and the main container never starts.
+- To read an init container's log, use kubectl logs with -c and its name. Asking for the main container's log before it starts gives PodInitializing.
+- A sidecar is a second container in the same pod. Containers in a pod can share files through a volume such as emptyDir, and each container must mount the volume itself.
+- Running and 2/2 only prove that the processes are alive. The broken sidecar looked healthy while it did nothing, so I read its logs to find the problem.
+
+Problems and limits (honest):
+- I only used a DNS lookup as the dependency check. I did not test waiting for a real database, a TCP port or an HTTP endpoint.
+- I did not measure how long the pod took to start after I made the service, because I checked a couple of minutes later.
+- I used classic sidecars (a second regular container). I did not test the newer native sidecar form, which runs as an init container that keeps running.
+- I did not test init container resource limits, or what happens when a sidecar crashes while the main container keeps running.
+- Single run on a one-node kind cluster.
