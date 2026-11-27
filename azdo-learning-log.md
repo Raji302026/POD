@@ -1506,3 +1506,31 @@ Problems and limits (honest):
 - I used classic sidecars (a second regular container). I did not test the newer native sidecar form, which runs as an init container that keeps running.
 - I did not test init container resource limits, or what happens when a sidecar crashes while the main container keeps running.
 - Single run on a one-node kind cluster.
+
+## Module 53: Taints and tolerations in kind
+
+Date: 2026-11-27
+
+What I did:
+- Reused the kind cluster named config. It has one node, config-control-plane, and it had no taints at the start. Made a namespace named taint-lab.
+- Added a NoSchedule taint (lab=special) to the node. A new pod named plain, made with kubectl run and no toleration, stayed Pending, and the event said FailedScheduling with 1 node had untolerated taint. The pods already running in kube-system stayed Running.
+- Made a pod named tolerant with a matching toleration (key lab, value special, effect NoSchedule). It went to Running, while plain stayed Pending.
+- Made a pod named wrongval with a toleration whose value is other. It stayed Pending with the same event message as plain, so the message alone does not say whether a toleration is missing or wrong.
+- Removed the taint with the trailing minus sign. Both plain and wrongval became Running on their own, with no restart.
+- Deleted the namespace and checked that the node showed Taints none again. The two pod files are saved in taint-practice. The plain pod had no file because I made it with kubectl run.
+
+What I learned:
+- A taint on a node pushes pods away. A toleration on a pod allows it onto a node with a matching taint. A taint and a toleration together control where pods can go.
+- A toleration only permits a pod to land on a tainted node. It does not send the pod there, and it does not help any other pod.
+- A NoSchedule taint only blocks new pods. Pods that were already running stayed, which I saw in kube-system.
+- A wrong toleration (the wrong value) gives the same FailedScheduling message as no toleration at all. To find out which it is, I compare the pod's tolerations with the node's taints.
+- When the taint is removed, Pending pods get scheduled by themselves, because the scheduler keeps retrying.
+- Removing a taint needs the same key, value and effect followed by a minus sign. I also confirmed that no taint was left on the node, because a forgotten taint would block every new pod.
+
+Problems and limits (honest):
+- Single node cluster. I could not see pods spread between tainted and untainted nodes, or use a taint to reserve a node for special workloads.
+- I did not use NoExecute, because it would have evicted system pods from my only node. I did not test PreferNoSchedule, the operator Exists, or the built-in not-ready and unreachable taints that appeared in earlier pod descriptions.
+- I did not combine tolerations with nodeSelector or node affinity. A toleration alone does not pin a pod to a node.
+- I did not cordon or drain the node.
+- Some of my checks, such as the file contents of the copy with the wrong value, were not pasted. The behavior showed the files were correct.
+- Single run on a one-node kind cluster.
