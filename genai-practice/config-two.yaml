@@ -1,0 +1,13 @@
+model_list:
+  - model_name: fake-gpt
+    litellm_params:
+      model: openai/anything
+      api_base: http://127.0.0.1:9001/v1
+      api_key: fake-backend-key
+  - model_name: fake-gpt
+    litellm_params:
+      model: openai/anything
+      api_base: http://127.0.0.1:9002/v1
+      api_key: fake-backend-key
+general_settings:
+  master_key: sk-lab-1234
