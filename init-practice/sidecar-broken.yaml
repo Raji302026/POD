@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: logger-broken
+  namespace: init-lab
+spec:
+  volumes:
+  - name: logs
+    emptyDir: {}
+  containers:
+  - name: app
+    image: busybox:1.37.0
+    command: ['sh', '-c', 'while true; do date >> /logs/app.log; sleep 2; done']
+    volumeMounts:
+    - name: logs
+      mountPath: /logs
+  - name: shipper
+    image: busybox:1.37.0
+    command: ['sh', '-c', 'tail -F /logs/app.log']
