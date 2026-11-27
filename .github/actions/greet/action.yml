@@ -12,7 +12,6 @@ runs:
   using: composite
   steps:
   - id: make
-    shell: bash
     env:
       WHO: ${{ inputs.who }}
     run: echo "message=Hello $WHO" >> "$GITHUB_OUTPUT"
