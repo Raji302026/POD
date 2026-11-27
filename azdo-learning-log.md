@@ -1422,3 +1422,33 @@ Problems and limits (honest):
 - This was Kubernetes RBAC, not Azure RBAC. I did not practice Azure role assignments, deny assignments or Entra ID roles in this lab.
 - I did not make a custom ClusterRole, test aggregated roles, or test what happens if a new service account reuses the old name.
 - Single run on a one-node kind cluster. No lab files were kept, because I used kubectl commands only.
+
+## Module 50: Health probes (readiness, liveness and startup) in kind
+
+Date: 2026-11-27
+
+What I did:
+- Reused the kind cluster named config and made a namespace named probe-lab. Made a busybox pod named probe-demo with an exec readiness probe (cat /tmp/ready) and an exec liveness probe (cat /tmp/alive), both checking every 5 seconds.
+- Deleted /tmp/ready inside the pod. READY went to 0/1 with no restart, and the events showed Unhealthy with the readiness probe failing. After I made the file again it went back to 1/1.
+- My first check came too early. The readiness probe needs 3 failures in a row at 5 seconds each, so it takes about 15 seconds to show.
+- Deleted /tmp/alive. The events showed the liveness probe failing and then Killing. The container was restarted inside the same pod and RESTARTS went to 1. The start command made both files again.
+- About 31 seconds passed between Killing and the new Started event. I think this is the default stop wait of 30 seconds, but I did not test that.
+- Made a second pod named slow-demo whose app needs about 20 seconds to make its health file, with a liveness probe that gives up after about 10 seconds. It went into CrashLoopBackOff with 4 restarts after 100 seconds and never became healthy.
+- Made a third pod named slow-fixed with the same app plus a startup probe (5 second period, 12 failures allowed). It showed Startup probe failed warnings at first, then was 1/1 Running with 0 restarts at 46 seconds.
+- Deleted the namespace afterwards. The three pod files are saved in probes-practice.
+
+What I learned:
+- Readiness decides whether a pod gets traffic, and liveness decides whether a container is restarted. I saw both: a failing readiness probe gave 0/1 with no restart, and a failing liveness probe killed and restarted the container in the same pod.
+- A probe needs several failures in a row, so the effect shows after about failureThreshold times the period, not at once.
+- A liveness probe that is too impatient for a slow app causes a restart loop. The app never gets time to start, and the pod ends in CrashLoopBackOff.
+- A startup probe fixes this by holding off the liveness probe until the app has started. The fix was to give the startup probe enough room (12 checks at 5 seconds), not to loosen the liveness probe.
+- The restart counter and the events lag behind a kill by a few seconds. Kubernetes folds repeated identical events into one line, so counting event lines gives the wrong number. The RESTARTS column is the one to trust.
+
+Problems and limits (honest):
+- This overlaps with my earlier entry from 2026-10-15 on deployments, probes and rollbacks. I did not check that entry before starting, because my first search only looked at Module headings. What is new here is the liveness restart, the impatient liveness loop and the startup probe.
+- I only used exec probes. I did not try HTTP or TCP probes, check Service endpoints, or run a rolling update with probes in this lab.
+- I did not test timeoutSeconds, initialDelaySeconds or successThreshold.
+- I set terminationGracePeriodSeconds to 1 on the two slow pods to speed up the lab. That is not a production setting.
+- My explanation of the 31 second gap after Killing (the default 30 second stop wait) is a guess that I did not test.
+- Several of my first checks came too early, because the probes need about 10 to 15 seconds to show.
+- Single run on a one-node kind cluster.
