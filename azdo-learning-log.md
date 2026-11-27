@@ -1566,3 +1566,32 @@ Problems and limits (honest):
 - I did not capture the error from the first install attempt, which looked partial.
 - The keys are fake and the master key sits in a config file in a public repo, which is fine for a lab and wrong for real use. There is no TLS or hardening.
 - Single run in a Codespace on Python 3.14.
+
+## Module 55: Two backends behind one model name in an LLM gateway
+
+Date: 2026-11-27
+
+What I did:
+- Reused the LiteLLM environment from Module 54. Wrote a second fake model server (genai-practice/fake_llm_labeled.py) that takes a port and a name from the command line and puts the name in its answer. Started two copies, A on port 9001 and B on port 9002. A direct call to each returned its own label.
+- Wrote a gateway config (genai-practice/config-two.yaml) that lists the model name fake-gpt twice, once for each backend, and started the gateway on port 4001.
+- Sent 10 identical requests through the gateway. A answered 3 and B answered 7. The split was uneven, which fits a random pick, but it was one run.
+- Stopped backend A and sent 10 more requests. All 10 returned HTTP 200 and all 10 were answered by B, so the client never saw a failure.
+- Stopped backend B as well. Three requests returned HTTP 500, and the gateway liveliness check still said it was alive.
+- Started backend A again and sent 5 requests straight away. All 5 returned HTTP 200, so I saw no waiting period before the gateway used it again. I did not run the planned second batch after 60 seconds, because the first batch had already succeeded.
+- Stopped the gateway and the fake servers afterwards. The new files are saved in genai-practice.
+
+What I learned:
+- A gateway can have several backends behind one model name. The client only asks for the model name and never knows how many backends there are.
+- With one backend down, the client saw no failures in my test. The gateway kept the dead backend out of the way. I do not know whether it retried each failed request or set the backend aside, because I did not read the reason in its log.
+- With every backend down, the client gets an error (HTTP 500) while the gateway itself stays alive. So a liveliness check on the gateway says nothing about whether its models work.
+- When the backend came back, the gateway used it at once in my test. I saw no waiting period.
+- Counting answers over several requests shows the real behaviour. Looking at one answer would have hidden the split and the failover.
+
+Problems and limits (honest):
+- The backends were fake Python servers, so I saw nothing about real latency, real errors such as rate limits, streaming or token cost.
+- The 3 and 7 split came from a single run of 10 requests. It is consistent with a random pick, but I did not test the routing setting or try more requests.
+- I did not read the gateway log for the retry or cooldown reason. I searched for it, but I did not paste the result, so I do not know what it showed.
+- I did not set up fallbacks to a different model, a retry count, a cooldown time or weights.
+- The recovery test used one restart a couple of minutes after the failure. A different timing could behave differently. I also never confirmed from the answers that A, and only A, replied after the restart.
+- No database, so no virtual keys, budgets or per-key limits. The keys are fake and in a config file in a public repo, which is fine for a lab only.
+- Single run on a Codespace with Python 3.14.
