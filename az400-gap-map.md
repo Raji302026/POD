@@ -12,7 +12,7 @@ Marks are based on files in this repo. "Practiced" means a lab or workflow exist
 - Identity (OIDC claims workflow)
 - Variables and secrets (vars-and-secrets workflow)
 - Infrastructure as code (Terraform modules, state, import; Bicep checks)
-- Containers and Kubernetes (Helm, probes, affinity, PDB, quotas, network policy, PV/PVC, debugging)
+- Containers and Kubernetes (Helm, probes (readiness, liveness and startup, exec probes only), affinity, PDB, quotas, network policy, PV/PVC, debugging)
 - Observability (Prometheus, Alertmanager, Grafana, KQL queries)
 - Metrics and incident process (DORA script, blameless postmortem)
 - Policy as code (Conftest/OPA)
