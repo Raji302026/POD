@@ -1452,3 +1452,30 @@ Problems and limits (honest):
 - My explanation of the 31 second gap after Killing (the default 30 second stop wait) is a guess that I did not test.
 - Several of my first checks came too early, because the probes need about 10 to 15 seconds to show.
 - Single run on a one-node kind cluster.
+
+## Module 51: Composite actions in GitHub Actions
+
+Date: 2026-11-27
+
+What I did:
+- Made a branch named composite-lab and a local composite action in .github/actions/greet with one input (who), one output (message) and two steps. The input goes through an environment variable and not straight into the run line, which is the safer pattern.
+- Made a workflow named composite-lab that runs on push when the action or the workflow file changes, with contents read permission and a 5 minute timeout. It checks out the repo, calls the local action with who set to Raji and prints the output. The run succeeded and the log showed Output was Hello Raji and Done greeting.
+- Removed shell from the first step on purpose. The run failed in 7 seconds, before any step of the action ran, with Required property is missing: shell, pointing at line 14.
+- My first fix added the shell line twice, probably because the insert command ran twice. The run failed again with shell is already defined at line 16. I deleted the duplicate and the run passed with Output was Hello Raji.
+
+What I learned:
+- A composite action packages a few steps so that many workflows can call them. It is the step-level version of a reusable workflow, which packages whole jobs.
+- Every run step in a composite action needs its own shell. Normal workflow steps do not need one. A missing shell is a hard error at load time, and a duplicate shell is a hard error too.
+- An action declares inputs and outputs. The output is set by writing name=value to the GITHUB_OUTPUT file in a step, and the action maps it with value from the step id.
+- Passing an input through an env variable and then using the variable in the script is safer than putting the input expression directly in the run line, because a bad value cannot become part of the command.
+- A local action is called with a path that starts with ./ and needs the repo to be checked out first.
+- A green run is not enough proof. I also read the log to see that the output really was Hello Raji.
+
+Problems and limits (honest):
+- Reusable workflows were already done on 2026-10-08. This lab covers composite actions only, and I did not compare the two side by side.
+- I did not check my own file before pushing the first fix. A grep count would have shown 3 shell lines instead of 2 and saved one failed run.
+- The step "which keyword is required" was meant as a prediction for me to write down, but I did not record my own answer before running it.
+- I did not test a composite action from another repo, versioned with a tag, or published to the marketplace. I also did not test a composite action that calls another action with uses.
+- I did not test what happens with untrusted input in the unsafe pattern. I only used the safe pattern.
+- The checkout action is on v7, which came from an earlier Dependabot change, and it is not pinned by commit.
+- Single run on GitHub-hosted runners. The workflow stays in the repo and runs again when its files change.
