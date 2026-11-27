@@ -7,7 +7,7 @@ Marks are based on files in this repo. "Practiced" means a lab or workflow exist
 ## Practiced
 - Branch policies and protection (ruleset, required checks, proof of blocking)
 - Secret scanning (gitleaks in CI, secret-scan check)
-- Templates and reuse (extends template, reusable workflows)
+- Templates and reuse (extends template, reusable workflows, composite actions)
 - Environments, approvals and deployment strategies (deploy-canary workflow, azure-pipelines-canary.yml)
 - Identity (OIDC claims workflow)
 - Variables and secrets (vars-and-secrets workflow)
