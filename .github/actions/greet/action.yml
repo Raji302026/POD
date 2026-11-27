@@ -13,7 +13,6 @@ runs:
   steps:
   - id: make
     shell: bash
-    shell: bash
     env:
       WHO: ${{ inputs.who }}
     run: echo "message=Hello $WHO" >> "$GITHUB_OUTPUT"
