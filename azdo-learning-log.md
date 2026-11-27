@@ -1534,3 +1534,35 @@ Problems and limits (honest):
 - I did not cordon or drain the node.
 - Some of my checks, such as the file contents of the copy with the wrong value, were not pasted. The behavior showed the files were correct.
 - Single run on a one-node kind cluster.
+
+## Module 54: An LLM gateway with LiteLLM and a fake model
+
+Date: 2026-11-27
+
+What I did:
+- Made a Python virtual environment outside the repo and installed LiteLLM 1.111.0 with the proxy extras on Python 3.14. A first check said the package was not found, although the disk use had grown. A second install run finished. I did not capture the error from the first attempt.
+- Wrote a tiny fake model server in Python (genai-practice/fake_llm.py) that answers on port 9000 in the standard chat format with the text FAKE reply to followed by my message. A direct call returned that answer.
+- Wrote a gateway config (genai-practice/config.yaml) with one model name, fake-gpt, pointing at the fake server, a fake backend key and a fake gateway master key. Started the gateway on port 4001.
+- Called the gateway with the gateway key. It returned the fake answer with the model name fake-gpt. The fake server's request count went up by exactly 1 for one good call (8 to 9).
+- Asked for an unknown model name. The gateway returned HTTP 400 with an invalid model name message, and the fake server's count did not change. The models endpoint listed only fake-gpt.
+- Used a wrong key. The gateway returned HTTP 400 with the message No connected db, because my gateway had no database. In a before and after test the fake server's count did not change.
+- Stopped the fake server and called the gateway again. It returned HTTP 500 with a connection error and the note that no fallback was attempted, while its liveliness check still said it was alive.
+- Stopped the gateway and the fake server afterwards. The two files are saved in genai-practice.
+
+What I learned:
+- An LLM gateway gives apps one endpoint in the standard chat format. It maps a gateway model name to a backend, so apps only know the gateway name and the gateway key. The backend key stays in the gateway config.
+- The gateway turned away an unknown model name and a wrong key before anything reached the backend. I measured this by counting the requests the fake server received, before and after each call.
+- Without a database, my gateway only knew its master key. Virtual keys, per-key budgets and revoking one key need a database.
+- A gateway that is alive does not mean its models work. With the backend stopped, the liveliness check still answered while real calls returned HTTP 500. A gateway needs health checks for each model, and fallbacks.
+- A before and after count is a better test than assuming. I guessed wrong twice (the wrong key status and the request count), and the measurements fixed both.
+
+Problems and limits (honest):
+- The model was a fake Python server, so there was no real LLM, no streaming, no real token counting and no latency to see.
+- My gateway had no database, so I did not try virtual keys, budgets, rate limits, spend logs or per-key model access.
+- I did not test fallbacks, retries, load balancing across two backends or Langfuse tracing.
+- The wrong-key answer (HTTP 400 with No connected db) is specific to a gateway without a database. I do not know what a gateway with a database answers, and I did not touch the real LiteLLM setup on the server.
+- I predicted a 401 for the wrong key and the result was a 400, so my prediction was wrong.
+- The fake server's count jumped from 9 to 11 between two checks. I could not explain it. A before and after test showed that a wrong key did not cause it, so it was probably calls I did not paste.
+- I did not capture the error from the first install attempt, which looked partial.
+- The keys are fake and the master key sits in a config file in a public repo, which is fine for a lab and wrong for real use. There is no TLS or hardening.
+- Single run in a Codespace on Python 3.14.
